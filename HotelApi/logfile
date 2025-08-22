@@ -1,0 +1,20 @@
+2025-08-19 17:33:48.824 +03 [11316] LOG:  starting PostgreSQL 17.5 on x86_64-windows, compiled by msvc-19.44.35209, 64-bit
+2025-08-19 17:33:48.830 +03 [11316] LOG:  listening on IPv6 address "::1", port 5432
+2025-08-19 17:33:48.830 +03 [11316] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-08-19 17:33:49.021 +03 [14432] LOG:  database system was interrupted; last known up at 2025-08-12 17:03:44 +03
+2025-08-19 17:33:49.481 +03 [14432] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-08-19 17:33:49.487 +03 [14432] LOG:  redo starts at 0/1A3AC08
+2025-08-19 17:33:49.488 +03 [14432] LOG:  invalid record length at 0/1A3AD48: expected at least 24, got 0
+2025-08-19 17:33:49.488 +03 [14432] LOG:  redo done at 0/1A3AD10 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2025-08-19 17:33:49.493 +03 [3368] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-08-19 17:33:49.502 +03 [3368] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.002 s, sync=0.002 s, total=0.011 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/1A3AD48, redo lsn=0/1A3AD48
+2025-08-19 17:33:49.533 +03 [11316] LOG:  database system is ready to accept connections
+2025-08-19 17:34:36.790 +03 [11316] LOG:  received fast shutdown request
+2025-08-19 17:34:36.799 +03 [11316] LOG:  aborting any active transactions
+2025-08-19 17:34:36.801 +03 [31020] ERROR:  canceling statement due to user request
+2025-08-19 17:34:36.801 +03 [4324] ERROR:  canceling statement due to user request
+2025-08-19 17:34:36.815 +03 [11316] LOG:  background worker "logical replication launcher" (PID 31020) exited with exit code 1
+2025-08-19 17:34:36.825 +03 [3368] LOG:  shutting down
+2025-08-19 17:34:36.826 +03 [3368] LOG:  checkpoint starting: shutdown immediate
+2025-08-19 17:34:36.832 +03 [3368] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.008 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=0 kB; lsn=0/1A3ADF8, redo lsn=0/1A3ADF8
+2025-08-19 17:34:36.844 +03 [11316] LOG:  database system is shut down

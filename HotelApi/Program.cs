@@ -1,4 +1,13 @@
+using HotelApi.Data;
+using Microsoft.EntityFrameworkCore;
+
+
+
+
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<HotelDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
