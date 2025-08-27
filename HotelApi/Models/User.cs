@@ -7,5 +7,8 @@ namespace HotelApi.Models
         public string PasswordHash { get; set; } = string.Empty;
         public string Role { get; set; } = "Customer";      // Admin / HotelOwner / Customer
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public ICollection<Reservation>? Reservations { get; set; } = new List<Reservation>();
     }
 }

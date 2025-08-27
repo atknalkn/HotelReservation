@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using HotelApi.Data;
 using HotelApi.Models;
+using HotelApi.DTOs;
 
 namespace HotelApi.Controllers
 {
@@ -33,8 +34,16 @@ namespace HotelApi.Controllers
 
         // POST: api/users
         [HttpPost]
-        public IActionResult Create(User user)
+        public IActionResult Create(UserDto userDto)
         {
+            var user = new User
+            {
+                Email = userDto.Email,
+                PasswordHash = userDto.PasswordHash,
+                Role = userDto.Role,
+                CreatedAt = DateTime.UtcNow
+            };
+
             _context.Users.Add(user);
             _context.SaveChanges();
             return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
@@ -42,14 +51,14 @@ namespace HotelApi.Controllers
 
         // PUT: api/users/1
         [HttpPut("{id}")]
-        public IActionResult Update(int id, User updatedUser)
+        public IActionResult Update(int id, UserDto userDto)
         {
             var user = _context.Users.Find(id);
             if (user == null) return NotFound();
 
-            user.Email = updatedUser.Email;
-            user.PasswordHash = updatedUser.PasswordHash;
-            user.Role = updatedUser.Role;
+            user.Email = userDto.Email;
+            user.PasswordHash = userDto.PasswordHash;
+            user.Role = userDto.Role;
 
             _context.SaveChanges();
             return Ok(user);

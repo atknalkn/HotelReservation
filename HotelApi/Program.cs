@@ -1,5 +1,6 @@
 using HotelApi.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization; // <= JSON'da enum'ları string olarak kabul etmek için
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,8 +8,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<HotelDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// MVC Controllers
-builder.Services.AddControllers();
+// Controllers + JSON enum ayarı (string kabul et)
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(o =>
+    {
+        // "Approved", "Pending", "Rejected" gibi string enum değerlerini kabul etsin/dönsün
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        
+        // Circular reference'ı önle
+        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        
+        // Navigation property'leri serialize etme
+        o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -16,7 +29,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware pipeline
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -24,11 +37,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// (İleride kimlik doğrulama eklersen dursun)
 app.UseAuthorization();
 
-// Attribute-routed controller’ları aktif et
 app.MapControllers();
 
 app.Run();

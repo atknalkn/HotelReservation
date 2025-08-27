@@ -3,6 +3,7 @@ using System;
 using HotelApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HotelApi.Migrations
 {
     [DbContext(typeof(HotelDbContext))]
-    partial class HotelDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250827021710_AddPropertiesAndRoomTypes")]
+    partial class AddPropertiesAndRoomTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,34 +24,6 @@ namespace HotelApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("HotelApi.Models.Availability", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<decimal?>("PriceOverride")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Stock")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoomTypeId", "Date")
-                        .IsUnique();
-
-                    b.ToTable("Availabilities");
-                });
 
             modelBuilder.Entity("HotelApi.Models.Hotel", b =>
                 {
@@ -136,57 +111,6 @@ namespace HotelApi.Migrations
                     b.ToTable("Properties");
                 });
 
-            modelBuilder.Entity("HotelApi.Models.Reservation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CheckIn")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime>("CheckOut")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Guests")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("HotelId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PropertyId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PropertyId");
-
-                    b.HasIndex("RoomTypeId");
-
-                    b.HasIndex("HotelId", "CheckIn");
-
-                    b.HasIndex("UserId", "CheckIn");
-
-                    b.ToTable("Reservations");
-                });
-
             modelBuilder.Entity("HotelApi.Models.RoomType", b =>
                 {
                     b.Property<int>("Id")
@@ -248,17 +172,6 @@ namespace HotelApi.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("HotelApi.Models.Availability", b =>
-                {
-                    b.HasOne("HotelApi.Models.RoomType", "RoomType")
-                        .WithMany("Availabilities")
-                        .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RoomType");
-                });
-
             modelBuilder.Entity("HotelApi.Models.Hotel", b =>
                 {
                     b.HasOne("HotelApi.Models.User", "OwnerUser")
@@ -281,41 +194,6 @@ namespace HotelApi.Migrations
                     b.Navigation("Hotel");
                 });
 
-            modelBuilder.Entity("HotelApi.Models.Reservation", b =>
-                {
-                    b.HasOne("HotelApi.Models.Hotel", "Hotel")
-                        .WithMany("Reservations")
-                        .HasForeignKey("HotelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HotelApi.Models.Property", "Property")
-                        .WithMany()
-                        .HasForeignKey("PropertyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HotelApi.Models.RoomType", "RoomType")
-                        .WithMany()
-                        .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HotelApi.Models.User", "User")
-                        .WithMany("Reservations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Hotel");
-
-                    b.Navigation("Property");
-
-                    b.Navigation("RoomType");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("HotelApi.Models.RoomType", b =>
                 {
                     b.HasOne("HotelApi.Models.Property", "Property")
@@ -327,24 +205,9 @@ namespace HotelApi.Migrations
                     b.Navigation("Property");
                 });
 
-            modelBuilder.Entity("HotelApi.Models.Hotel", b =>
-                {
-                    b.Navigation("Reservations");
-                });
-
             modelBuilder.Entity("HotelApi.Models.Property", b =>
                 {
                     b.Navigation("RoomTypes");
-                });
-
-            modelBuilder.Entity("HotelApi.Models.RoomType", b =>
-                {
-                    b.Navigation("Availabilities");
-                });
-
-            modelBuilder.Entity("HotelApi.Models.User", b =>
-                {
-                    b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618
         }
