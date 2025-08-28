@@ -5,6 +5,7 @@ using HotelApi.Models;
 using HotelApi.DTOs;
 using System.Transactions;
 using Microsoft.AspNetCore.Authorization;
+using HotelApi.Services;
 
 namespace HotelApi.Controller
 {
@@ -14,11 +15,16 @@ namespace HotelApi.Controller
     {
         private readonly HotelDbContext _context;
         private readonly ILogger<ReservationsController> _logger;
+        private readonly ICommissionService _commissionService;
 
-        public ReservationsController(HotelDbContext context, ILogger<ReservationsController> logger)
+        public ReservationsController(
+            HotelDbContext context, 
+            ILogger<ReservationsController> logger,
+            ICommissionService commissionService)
         {
             _context = context;
             _logger = logger;
+            _commissionService = commissionService;
         }
 
         // GET: api/Reservations
@@ -234,6 +240,10 @@ namespace HotelApi.Controller
                         return BadRequest("Seçilen tarih aralığında yeterli stok bulunmamaktadır");
                     }
 
+                    // Komisyon hesapla
+                    var commissionAmount = await _commissionService.CalculateCommissionForReservationAsync(totalPrice);
+                    var netAmount = totalPrice - commissionAmount;
+
                     // Rezervasyon oluştur
                     var reservation = new Reservation
                     {
@@ -245,6 +255,8 @@ namespace HotelApi.Controller
                         CheckOut = reservationDto.CheckOut.Date,
                         Guests = reservationDto.Guests,
                         TotalPrice = totalPrice,
+                        CommissionAmount = commissionAmount,
+                        NetAmount = netAmount,
                         Status = ReservationStatus.Pending,
                         CreatedAt = DateTime.UtcNow
                     };

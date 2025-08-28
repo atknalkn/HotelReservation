@@ -13,6 +13,8 @@ namespace HotelApi.Data
         public DbSet<RoomType> RoomTypes => Set<RoomType>();
         public DbSet<Availability> Availabilities => Set<Availability>();
         public DbSet<Reservation> Reservations => Set<Reservation>();
+        public DbSet<CommissionSettings> CommissionSettings => Set<CommissionSettings>();
+        public DbSet<Review> Reviews => Set<Review>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -104,6 +106,69 @@ namespace HotelApi.Data
             // Reservation için index (HotelId + CheckIn)
             modelBuilder.Entity<Reservation>()
                 .HasIndex(r => new { r.HotelId, r.CheckIn });
+
+            // CommissionSettings -> User FK
+            modelBuilder.Entity<CommissionSettings>()
+                .HasOne(cs => cs.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(cs => cs.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // CommissionSettings için index (IsActive + LastUpdated)
+            modelBuilder.Entity<CommissionSettings>()
+                .HasIndex(cs => new { cs.IsActive, cs.LastUpdated });
+
+            // Review -> Hotel FK
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Hotel)
+                .WithMany(h => h.Reviews)
+                .HasForeignKey(r => r.HotelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review -> Property FK
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Property)
+                .WithMany(p => p.Reviews)
+                .HasForeignKey(r => r.PropertyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review -> RoomType FK
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.RoomType)
+                .WithMany(rt => rt.Reviews)
+                .HasForeignKey(r => r.RoomTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review -> User FK
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review -> Reservation FK
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Reservation)
+                .WithMany()
+                .HasForeignKey(r => r.ReservationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review için index'ler
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.HotelId, r.Status, r.CreatedAt });
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.PropertyId, r.Status, r.CreatedAt });
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.RoomTypeId, r.Status, r.CreatedAt });
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.UserId, r.CreatedAt });
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.ReservationId })
+                .IsUnique();
         }
     }
 }

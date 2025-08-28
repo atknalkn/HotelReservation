@@ -36,6 +36,13 @@ namespace HotelApi.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
         
+        // Komisyon alanları
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CommissionAmount { get; set; } = 0; // Hesaplanan komisyon tutarı
+        
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal NetAmount { get; set; } = 0; // Otel sahibine gidecek net tutar (TotalPrice - CommissionAmount)
+        
         [Required]
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
         

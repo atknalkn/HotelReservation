@@ -43,6 +43,12 @@ builder.Services.AddAuthorization(options =>
 // JWT Service
 builder.Services.AddScoped<IJwtService, JwtService>();
 
+// Commission Service
+builder.Services.AddScoped<ICommissionService, CommissionService>();
+
+// Review Service
+builder.Services.AddScoped<IReviewService, ReviewService>();
+
 // DbContext
 builder.Services.AddDbContext<HotelDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
