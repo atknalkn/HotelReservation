@@ -3,6 +3,7 @@ using HotelApi.Models;
 using HotelApi.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelApi.Controllers
 {
@@ -16,6 +17,7 @@ namespace HotelApi.Controllers
         // GET: api/properties
         // Filtreler: ?hotelId=1&city=Ankara
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll([FromQuery] int? hotelId, [FromQuery] string? city)
         {
             var q = _context.Properties.AsQueryable();
@@ -35,6 +37,7 @@ namespace HotelApi.Controllers
 
         // GET: api/properties/5
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
             var prop = await _context.Properties
@@ -46,6 +49,7 @@ namespace HotelApi.Controllers
 
         // POST: api/properties
         [HttpPost]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> Create([FromBody] PropertyDto propertyDto)
         {
             // Basit doğrulamalar
@@ -74,6 +78,7 @@ namespace HotelApi.Controllers
 
         // PUT: api/properties/5
         [HttpPut("{id:int}")]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> Update(int id, [FromBody] PropertyDto propertyDto)
         {
             var prop = await _context.Properties.FindAsync(id);
@@ -97,6 +102,7 @@ namespace HotelApi.Controllers
 
         // DELETE: api/properties/5
         [HttpDelete("{id:int}")]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> Delete(int id)
         {
             var prop = await _context.Properties.FindAsync(id);

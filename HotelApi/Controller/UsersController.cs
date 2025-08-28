@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using HotelApi.Data;
 using HotelApi.Models;
 using HotelApi.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Policy = "AdminOnly")]
     public class UsersController : ControllerBase
     {
         private readonly HotelDbContext _context;

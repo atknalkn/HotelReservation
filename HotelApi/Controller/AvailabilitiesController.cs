@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using HotelApi.Data;
 using HotelApi.Models;
 using HotelApi.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelApi.Controller
 {
@@ -19,6 +20,7 @@ namespace HotelApi.Controller
 
         // GET: api/Availabilities
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Availability>>> GetAvailabilities()
         {
             return await _context.Availabilities
@@ -28,6 +30,7 @@ namespace HotelApi.Controller
 
         // GET: api/Availabilities/5
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Availability>> GetAvailability(int id)
         {
             var availability = await _context.Availabilities
@@ -44,6 +47,7 @@ namespace HotelApi.Controller
 
         // GET: api/Availabilities/roomtype/5
         [HttpGet("roomtype/{roomTypeId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Availability>>> GetAvailabilitiesByRoomType(int roomTypeId)
         {
             var availabilities = await _context.Availabilities
@@ -56,6 +60,7 @@ namespace HotelApi.Controller
 
         // GET: api/Availabilities/roomtype/5/date/2025-08-27
         [HttpGet("roomtype/{roomTypeId}/date/{date:datetime}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Availability>> GetAvailabilityByRoomTypeAndDate(int roomTypeId, DateTime date)
         {
             var availability = await _context.Availabilities
@@ -71,6 +76,7 @@ namespace HotelApi.Controller
 
         // POST: api/Availabilities
         [HttpPost]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<ActionResult<AvailabilityResponseDto>> PostAvailability(AvailabilityDto availabilityDto)
         {
             // RoomType'ın var olup olmadığını kontrol et
@@ -117,6 +123,7 @@ namespace HotelApi.Controller
 
         // PUT: api/Availabilities/5
         [HttpPut("{id}")]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> PutAvailability(int id, AvailabilityDto availabilityDto)
         {
             var availability = await _context.Availabilities.FindAsync(id);
@@ -169,6 +176,7 @@ namespace HotelApi.Controller
 
         // DELETE: api/Availabilities/5
         [HttpDelete("{id}")]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> DeleteAvailability(int id)
         {
             var availability = await _context.Availabilities.FindAsync(id);

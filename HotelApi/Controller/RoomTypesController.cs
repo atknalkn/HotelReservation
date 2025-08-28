@@ -3,6 +3,7 @@ using HotelApi.Models;
 using HotelApi.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelApi.Controller
 {
@@ -19,6 +20,7 @@ namespace HotelApi.Controller
 
         // GET: api/RoomTypes
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<RoomType>>> GetRoomTypes()
         {
             return await _context.RoomTypes
@@ -28,6 +30,7 @@ namespace HotelApi.Controller
 
         // GET: api/RoomTypes/5
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<RoomType>> GetRoomType(int id)
         {
             var roomType = await _context.RoomTypes
@@ -44,6 +47,7 @@ namespace HotelApi.Controller
 
         // GET: api/RoomTypes/ByProperty/5
         [HttpGet("ByProperty/{propertyId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<RoomType>>> GetRoomTypesByProperty(int propertyId)
         {
             var roomTypes = await _context.RoomTypes
@@ -55,6 +59,7 @@ namespace HotelApi.Controller
 
         // POST: api/RoomTypes
         [HttpPost]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<ActionResult<RoomType>> PostRoomType(RoomTypeDto roomTypeDto)
         {
             // Property'nin var olup olmadığını kontrol et
@@ -90,6 +95,7 @@ namespace HotelApi.Controller
 
         // PUT: api/RoomTypes/5
         [HttpPut("{id}")]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> PutRoomType(int id, RoomTypeDto roomTypeDto)
         {
             var roomType = await _context.RoomTypes.FindAsync(id);
@@ -143,6 +149,7 @@ namespace HotelApi.Controller
 
         // DELETE: api/RoomTypes/5
         [HttpDelete("{id}")]
+        [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> DeleteRoomType(int id)
         {
             var roomType = await _context.RoomTypes.FindAsync(id);

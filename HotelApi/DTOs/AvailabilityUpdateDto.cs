@@ -2,7 +2,7 @@ namespace HotelApi.DTOs
 {
     public class AvailabilityUpdateDto
     {
-        public int Stock { get; set; }
-        public decimal? PriceOverride { get; set; }
+        public int AvailabilityId { get; set; }
+        public int StockToReduce { get; set; }
     }
 }

@@ -18,6 +18,7 @@ namespace HotelApi.Models
         public string Address { get; set; } = "";
         public string TaxNo { get; set; } = "";             // Vergi No
         public HotelStatus Status { get; set; } = HotelStatus.Pending;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Başvuru tarihi
 
         // Opsiyonel: Yıldız bilgisini korumak istersen
         public int StarRating { get; set; }  // 1-5 (istersen şimdilik bırak, istersen kaldır)
