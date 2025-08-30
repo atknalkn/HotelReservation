@@ -1,6 +1,137 @@
 @HotelApi_HostAddress = http://localhost:5164
+@token = your_jwt_token_here
 
-GET {{HotelApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### Hotel Owner API Endpoints
+
+# Get my hotels
+GET {{HotelApi_HostAddress}}/api/hotels/my-hotels
+Authorization: Bearer {{token}}
 
 ###
+
+# Get hotel dashboard
+GET {{HotelApi_HostAddress}}/api/hotels/1/dashboard
+Authorization: Bearer {{token}}
+
+###
+
+# Get my properties
+GET {{HotelApi_HostAddress}}/api/properties/my-properties
+Authorization: Bearer {{token}}
+
+###
+
+# Get my room types
+GET {{HotelApi_HostAddress}}/api/roomtypes/my-room-types
+Authorization: Bearer {{token}}
+
+###
+
+# Get my availabilities
+GET {{HotelApi_HostAddress}}/api/availabilities/my-availabilities
+Authorization: Bearer {{token}}
+
+###
+
+# Get reservations by hotel
+GET {{HotelApi_HostAddress}}/api/reservations/hotel/1
+Authorization: Bearer {{token}}
+
+###
+
+# Create hotel
+POST {{HotelApi_HostAddress}}/api/hotels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test Hotel",
+  "city": "Istanbul",
+  "address": "Test Address",
+  "taxNo": "1234567890",
+  "starRating": 4,
+  "ownerUserId": 1
+}
+
+###
+
+# Create property
+POST {{HotelApi_HostAddress}}/api/properties
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "hotelId": 1,
+  "title": "Test Property",
+  "description": "Test Description",
+  "city": "Istanbul",
+  "address": "Test Address",
+  "stars": 4,
+  "location": "Test Location"
+}
+
+###
+
+# Create room type
+POST {{HotelApi_HostAddress}}/api/roomtypes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "propertyId": 1,
+  "name": "Standard Room",
+  "description": "Standard room description",
+  "capacity": 2,
+  "basePrice": 200.00
+}
+
+###
+
+# Create availability
+POST {{HotelApi_HostAddress}}/api/availabilities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roomTypeId": 1,
+  "date": "2025-01-15",
+  "stock": 5,
+  "priceOverride": 250.00
+}
+
+###
+
+# Admin API Endpoints
+
+# Get pending hotels
+GET {{HotelApi_HostAddress}}/api/hotels/pending
+Authorization: Bearer {{token}}
+
+###
+
+# Get pending reviews
+GET {{HotelApi_HostAddress}}/api/reviews/pending
+Authorization: Bearer {{token}}
+
+###
+
+# Get commission settings
+GET {{HotelApi_HostAddress}}/api/commission/settings
+Authorization: Bearer {{token}}
+
+###
+
+# Approve hotel
+POST {{HotelApi_HostAddress}}/api/hotels/1/approve
+Authorization: Bearer {{token}}
+
+###
+
+# Reject hotel
+POST {{HotelApi_HostAddress}}/api/hotels/1/reject
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Test rejection reason"
+}

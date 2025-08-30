@@ -21,6 +21,9 @@ namespace HotelApi.Models
         public decimal AverageValueRating { get; set; } = 0;
         public int TotalReviews { get; set; } = 0;
 
+        // Timestamp
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation
         public Hotel? Hotel { get; set; }
         public ICollection<RoomType>? RoomTypes { get; set; } = new List<RoomType>();

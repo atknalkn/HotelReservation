@@ -106,6 +106,19 @@ namespace HotelApi.Controller
         [Authorize(Policy = "CustomerOnly")]
         public async Task<ActionResult<IEnumerable<ReservationResponseDto>>> GetReservationsByUser(int userId)
         {
+            // JWT token'dan user ID'yi al
+            var userIdClaim = HttpContext.User.FindFirst("UserId");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            // Sadece kendi rezervasyonlarını görebilir
+            if (currentUserId != userId)
+            {
+                return Forbid("Sadece kendi rezervasyonlarınızı görebilirsiniz");
+            }
+
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Hotel)
@@ -135,6 +148,57 @@ namespace HotelApi.Controller
                 .ToListAsync();
 
             return reservations;
+        }
+
+        // GET: api/Reservations/my-reservations
+        [HttpGet("my-reservations")]
+        [Authorize(Policy = "CustomerOnly")]
+        public async Task<ActionResult<IEnumerable<ReservationResponseDto>>> GetMyReservations()
+        {
+            try
+            {
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                var reservations = await _context.Reservations
+                    .Include(r => r.User)
+                    .Include(r => r.Hotel)
+                    .Include(r => r.Property)
+                    .Include(r => r.RoomType)
+                    .Where(r => r.UserId == currentUserId)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => new ReservationResponseDto
+                    {
+                        Id = r.Id,
+                        UserId = r.UserId,
+                        UserEmail = r.User!.Email,
+                        HotelId = r.HotelId,
+                        HotelName = r.Hotel!.Name,
+                        PropertyId = r.PropertyId,
+                        PropertyTitle = r.Property!.Title,
+                        RoomTypeId = r.RoomTypeId,
+                        RoomTypeName = r.RoomType!.Name,
+                        CheckIn = r.CheckIn,
+                        CheckOut = r.CheckOut,
+                        Guests = r.Guests,
+                        TotalPrice = r.TotalPrice,
+                        Status = r.Status.ToString(),
+                        CreatedAt = r.CreatedAt,
+                        TotalNights = (r.CheckOut - r.CheckIn).Days
+                    })
+                    .ToListAsync();
+
+                return reservations;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Kullanıcı rezervasyonları alınırken hata: {Message}", ex.Message);
+                return StatusCode(500, "Rezervasyonlar alınırken bir hata oluştu");
+            }
         }
 
         // GET: api/Reservations/hotel/5
@@ -320,6 +384,7 @@ namespace HotelApi.Controller
 
         // PUT: api/Reservations/5/status
         [HttpPut("{id}/status")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateReservationStatus(int id, [FromBody] string status)
         {
             try
@@ -355,6 +420,61 @@ namespace HotelApi.Controller
             {
                 _logger.LogError(ex, "Rezervasyon durumu güncellenirken hata: {Message}", ex.Message);
                 return StatusCode(500, "Durum güncellenirken bir hata oluştu");
+            }
+        }
+
+        // PUT: api/Reservations/5/cancel
+        [HttpPut("{id}/cancel")]
+        [Authorize(Policy = "CustomerOnly")]
+        public async Task<IActionResult> CancelReservation(int id)
+        {
+            try
+            {
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                var reservation = await _context.Reservations
+                    .Include(r => r.User)
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                if (reservation == null)
+                {
+                    return NotFound("Rezervasyon bulunamadı");
+                }
+
+                // Sadece kendi rezervasyonunu iptal edebilir
+                if (reservation.UserId != currentUserId)
+                {
+                    return Forbid("Sadece kendi rezervasyonunuzu iptal edebilirsiniz");
+                }
+
+                // Sadece Pending veya Confirmed rezervasyonlar iptal edilebilir
+                if (reservation.Status != ReservationStatus.Pending && reservation.Status != ReservationStatus.Confirmed)
+                {
+                    return BadRequest("Bu rezervasyon iptal edilemez");
+                }
+
+                var oldStatus = reservation.Status;
+                reservation.Status = ReservationStatus.Cancelled;
+
+                // Stokları geri ekle
+                await RestoreAvailabilityStock(reservation);
+
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("Rezervasyon iptal edildi: ID {ReservationId}, User: {UserId}, Eski: {OldStatus}", 
+                    id, currentUserId, oldStatus);
+                
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Rezervasyon iptal edilirken hata: {Message}", ex.Message);
+                return StatusCode(500, "Rezervasyon iptal edilirken bir hata oluştu");
             }
         }
 

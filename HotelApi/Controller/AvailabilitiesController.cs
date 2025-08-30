@@ -79,29 +79,48 @@ namespace HotelApi.Controller
         [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<ActionResult<AvailabilityResponseDto>> PostAvailability(AvailabilityDto availabilityDto)
         {
-            // RoomType'ın var olup olmadığını kontrol et
-            var roomType = await _context.RoomTypes.FindAsync(availabilityDto.RoomTypeId);
-            if (roomType == null)
+            try
             {
-                return BadRequest("RoomType bulunamadı");
-            }
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
 
-            // Aynı RoomType için aynı tarihte Availability var mı kontrol et
-            var existingAvailability = await _context.Availabilities
-                .FirstOrDefaultAsync(a => a.RoomTypeId == availabilityDto.RoomTypeId && a.Date.Date == availabilityDto.Date.Date);
-            
-            if (existingAvailability != null)
-            {
-                return BadRequest("Bu RoomType için bu tarihte zaten Availability kaydı mevcut");
-            }
+                // RoomType'ın var olup olmadığını ve otel sahibine ait olup olmadığını kontrol et
+                var roomType = await _context.RoomTypes
+                    .Include(rt => rt.Property)
+                    .ThenInclude(p => p.Hotel)
+                    .FirstOrDefaultAsync(rt => rt.Id == availabilityDto.RoomTypeId);
 
-            var availability = new Availability
-            {
-                RoomTypeId = availabilityDto.RoomTypeId,
-                Date = availabilityDto.Date.Date, // Sadece tarih kısmını al, time zone sorununu önle
-                Stock = availabilityDto.Stock,
-                PriceOverride = availabilityDto.PriceOverride
-            };
+                if (roomType == null)
+                {
+                    return BadRequest("RoomType bulunamadı");
+                }
+
+                // Sadece kendi otelinin availability'sini ekleyebilir
+                if (roomType.Property.Hotel.OwnerUserId != currentUserId)
+                {
+                    return Forbid("Bu oda tipi size ait değil");
+                }
+
+                // Aynı RoomType için aynı tarihte Availability var mı kontrol et
+                var existingAvailability = await _context.Availabilities
+                    .FirstOrDefaultAsync(a => a.RoomTypeId == availabilityDto.RoomTypeId && a.Date.Date == availabilityDto.Date.Date);
+                
+                if (existingAvailability != null)
+                {
+                    return BadRequest("Bu RoomType için bu tarihte zaten Availability kaydı mevcut");
+                }
+
+                var availability = new Availability
+                {
+                    RoomTypeId = availabilityDto.RoomTypeId,
+                    Date = availabilityDto.Date.Date, // Sadece tarih kısmını al, time zone sorununu önle
+                    Stock = availabilityDto.Stock,
+                    PriceOverride = availabilityDto.PriceOverride
+                };
 
             _context.Availabilities.Add(availability);
             await _context.SaveChangesAsync();
@@ -119,6 +138,11 @@ namespace HotelApi.Controller
             };
 
             return CreatedAtAction(nameof(GetAvailability), new { id = availability.Id }, responseDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Availability oluşturulurken bir hata oluştu");
+            }
         }
 
         // PUT: api/Availabilities/5
@@ -179,16 +203,94 @@ namespace HotelApi.Controller
         [Authorize(Policy = "HotelOwnerOnly")]
         public async Task<IActionResult> DeleteAvailability(int id)
         {
-            var availability = await _context.Availabilities.FindAsync(id);
-            if (availability == null)
+            try
             {
-                return NotFound();
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                var availability = await _context.Availabilities
+                    .Include(a => a.RoomType)
+                    .ThenInclude(rt => rt.Property)
+                    .ThenInclude(p => p.Hotel)
+                    .FirstOrDefaultAsync(a => a.Id == id);
+
+                if (availability == null)
+                {
+                    return NotFound("Availability bulunamadı");
+                }
+
+                // Sadece kendi otelinin availability'sini silebilir
+                if (availability.RoomType.Property.Hotel.OwnerUserId != currentUserId)
+                {
+                    return Forbid("Bu availability size ait değil");
+                }
+
+                // Rezervasyon kontrolü
+                var hasReservations = await _context.Reservations
+                    .AnyAsync(r => r.RoomTypeId == availability.RoomTypeId && 
+                                   r.CheckIn <= availability.Date && 
+                                   r.CheckOut > availability.Date);
+
+                if (hasReservations)
+                {
+                    return BadRequest("Bu tarihte rezervasyon bulunduğu için availability silinemez");
+                }
+
+                _context.Availabilities.Remove(availability);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Availability silinirken bir hata oluştu");
+            }
+        }
 
-            _context.Availabilities.Remove(availability);
-            await _context.SaveChangesAsync();
+        // GET: api/Availabilities/my-availabilities
+        [HttpGet("my-availabilities")]
+        [Authorize(Policy = "HotelOwnerOnly")]
+        public async Task<ActionResult<IEnumerable<AvailabilityResponseDto>>> GetMyAvailabilities()
+        {
+            try
+            {
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
 
-            return NoContent();
+                var availabilities = await _context.Availabilities
+                    .Include(a => a.RoomType)
+                    .ThenInclude(rt => rt.Property)
+                    .ThenInclude(p => p.Hotel)
+                    .Where(a => a.RoomType.Property.Hotel.OwnerUserId == currentUserId)
+                    .OrderBy(a => a.Date)
+                    .Select(a => new AvailabilityResponseDto
+                    {
+                        Id = a.Id,
+                        RoomTypeId = a.RoomTypeId,
+                        RoomTypeName = a.RoomType.Name,
+                        PropertyTitle = a.RoomType.Property.Title,
+                        HotelName = a.RoomType.Property.Hotel.Name,
+                        Date = a.Date,
+                        Stock = a.Stock,
+                        PriceOverride = a.PriceOverride,
+                        EffectivePrice = a.PriceOverride ?? a.RoomType.BasePrice
+                    })
+                    .ToListAsync();
+
+                return availabilities;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Availability bilgileri alınırken bir hata oluştu");
+            }
         }
 
         private bool AvailabilityExists(int id)

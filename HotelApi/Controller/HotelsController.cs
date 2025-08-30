@@ -98,6 +98,94 @@ namespace HotelApi.Controllers
             return Ok(hotel);
         }
 
+        // GET: api/hotels/my-hotels
+        [HttpGet("my-hotels")]
+        [Authorize(Policy = "HotelOwnerOnly")]
+        public async Task<IActionResult> GetMyHotels()
+        {
+            try
+            {
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                var hotels = await _context.Hotels
+                    .Include(h => h.OwnerUser)
+                    .Where(h => h.OwnerUserId == currentUserId)
+                    .OrderByDescending(h => h.CreatedAt)
+                    .ToListAsync();
+
+                return Ok(hotels);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Otel bilgileri alınırken bir hata oluştu");
+            }
+        }
+
+        // GET: api/hotels/{id}/dashboard
+        [HttpGet("{id:int}/dashboard")]
+        [Authorize(Policy = "HotelOwnerOnly")]
+        public async Task<IActionResult> GetHotelDashboard(int id)
+        {
+            try
+            {
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                var hotel = await _context.Hotels
+                    .Include(h => h.OwnerUser)
+                    .FirstOrDefaultAsync(h => h.Id == id && h.OwnerUserId == currentUserId);
+
+                if (hotel == null)
+                {
+                    return NotFound("Otel bulunamadı veya bu otel size ait değil");
+                }
+
+                // Otel istatistikleri
+                var totalProperties = await _context.Properties
+                    .Where(p => p.HotelId == id)
+                    .CountAsync();
+
+                var totalRoomTypes = await _context.RoomTypes
+                    .Where(rt => rt.Property.HotelId == id)
+                    .CountAsync();
+
+                var totalReservations = await _context.Reservations
+                    .Where(r => r.HotelId == id)
+                    .CountAsync();
+
+                var activeReservations = await _context.Reservations
+                    .Where(r => r.HotelId == id && (r.Status == ReservationStatus.Pending || r.Status == ReservationStatus.Confirmed))
+                    .CountAsync();
+
+                var dashboardData = new
+                {
+                    Hotel = hotel,
+                    Statistics = new
+                    {
+                        TotalProperties = totalProperties,
+                        TotalRoomTypes = totalRoomTypes,
+                        TotalReservations = totalReservations,
+                        ActiveReservations = activeReservations
+                    }
+                };
+
+                return Ok(dashboardData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Dashboard bilgileri alınırken bir hata oluştu");
+            }
+        }
+
         // DELETE: api/hotels/1
         [HttpDelete("{id:int}")]
         [Authorize(Policy = "HotelOwnerOnly")]

@@ -11,6 +11,23 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:3001", 
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:3001"
+              )
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // JWT Settings
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -112,12 +129,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Global exception handler
+app.UseExceptionHandler("/error");
+
 app.UseHttpsRedirection();
+
+// CORS middleware - must be before authentication
+app.UseCors("AllowFrontend");
 
 // Authentication ve Authorization middleware'leri
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Health check endpoint
+app.MapGet("/health", () => "API is running!");
 
 app.Run();

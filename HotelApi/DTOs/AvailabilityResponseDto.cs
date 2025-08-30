@@ -5,6 +5,8 @@ namespace HotelApi.DTOs
         public int Id { get; set; }
         public int RoomTypeId { get; set; }
         public string RoomTypeName { get; set; } = "";
+        public string PropertyTitle { get; set; } = "";
+        public string HotelName { get; set; } = "";
         public DateTime Date { get; set; }
         public int Stock { get; set; }
         public decimal? PriceOverride { get; set; }
