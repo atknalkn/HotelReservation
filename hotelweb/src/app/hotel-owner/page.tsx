@@ -75,7 +75,6 @@ export default function HotelOwnerPage() {
     hotelCheckInTime: '14:00',
     hotelCheckOutTime: '11:00',
     hotelPolicies: '',
-    hotelCancellationPolicy: '',
     // Room form data
     roomName: '',
     roomDescription: '',
@@ -240,8 +239,7 @@ export default function HotelOwnerPage() {
             amenities: formData.hotelAmenities.join(', '),
             checkInTime: formData.hotelCheckInTime,
             checkOutTime: formData.hotelCheckOutTime,
-            policies: formData.hotelPolicies,
-            cancellationPolicy: formData.hotelCancellationPolicy
+            policies: formData.hotelPolicies
           }, { headers });
           break;
         case 'room':
@@ -278,7 +276,6 @@ export default function HotelOwnerPage() {
         hotelCheckInTime: '14:00',
         hotelCheckOutTime: '11:00',
         hotelPolicies: '',
-        hotelCancellationPolicy: '',
         roomName: '',
         roomDescription: '',
         roomCapacity: 2,
@@ -808,16 +805,6 @@ export default function HotelOwnerPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       rows={2}
                       placeholder="Otel kuralları ve politikaları..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">İptal Politikası</label>
-                    <textarea
-                      value={formData.hotelCancellationPolicy}
-                      onChange={(e) => setFormData({...formData, hotelCancellationPolicy: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                      rows={2}
-                      placeholder="İptal koşulları ve ücretlendirme..."
                     />
                   </div>
                 </>
