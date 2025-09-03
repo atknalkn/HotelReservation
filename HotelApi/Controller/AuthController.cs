@@ -70,6 +70,7 @@ namespace HotelApi.Controller
 
                 var response = new AuthResponseDto
                 {
+                    Id = user.Id,
                     Token = token,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
@@ -119,6 +120,7 @@ namespace HotelApi.Controller
 
                 var response = new AuthResponseDto
                 {
+                    Id = user.Id,
                     Token = token,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
@@ -247,6 +249,48 @@ namespace HotelApi.Controller
             {
                 _logger.LogError(ex, "Profile update failed");
                 return StatusCode(500, "Profil güncellenirken bir hata oluştu");
+            }
+        }
+
+        // POST: api/Auth/create-admin
+        [AllowAnonymous]
+        [HttpPost("create-admin")]
+        public async Task<ActionResult> CreateAdmin()
+        {
+            try
+            {
+                // Admin kullanıcısı zaten var mı kontrol et
+                if (await _context.Users.AnyAsync(u => u.Email == "admin@hotel.com"))
+                {
+                    return BadRequest("Admin kullanıcısı zaten mevcut");
+                }
+
+                // Şifre hashleme
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
+
+                // Admin user oluştur
+                var adminUser = new User
+                {
+                    FirstName = "Admin",
+                    LastName = "User",
+                    Email = "admin@hotel.com",
+                    PasswordHash = passwordHash,
+                    Role = "Admin",
+                    Gender = "Erkek",
+                    PhoneNumber = "05551234567",
+                    IdentityNumber = "12345678901",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(adminUser);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Admin kullanıcısı başarıyla oluşturuldu", email = "admin@hotel.com", password = "admin123" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Admin user creation failed");
+                return StatusCode(500, "Admin kullanıcısı oluşturulamadı");
             }
         }
 

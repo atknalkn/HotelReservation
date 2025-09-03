@@ -23,13 +23,27 @@ namespace HotelApi.Models
         // Opsiyonel: Yıldız bilgisini korumak istersen
         public int StarRating { get; set; }  // 1-5 (istersen şimdilik bırak, istersen kaldır)
 
+        // Yeni eklenen alanlar
+        public string Description { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Website { get; set; } = "";
+        public string Amenities { get; set; } = "";
+        public string CheckInTime { get; set; } = "14:00";
+        public string CheckOutTime { get; set; } = "11:00";
+        public string Policies { get; set; } = "";
+
         // Review sistemi için ortalama puanlar
         public decimal AverageOverallRating { get; set; } = 0;
         public decimal AverageCleanlinessRating { get; set; } = 0;
+
         public decimal AverageServiceRating { get; set; } = 0;
         public decimal AverageLocationRating { get; set; } = 0;
         public decimal AverageValueRating { get; set; } = 0;
         public int TotalReviews { get; set; } = 0;
+
+        // Fiyat bilgisi
+        public decimal? AveragePrice { get; set; }
 
         // Navigation
         public User? OwnerUser { get; set; }

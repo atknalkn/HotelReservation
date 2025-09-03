@@ -13,7 +13,7 @@ interface RegisterForm {
   confirmPassword: string;
 }
 
-export default function RegisterPage() {
+export default function HotelOwnerRegisterPage() {
   const [formData, setFormData] = useState<RegisterForm>({
     firstName: '',
     lastName: '',
@@ -58,7 +58,7 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
-        role: 'Customer'
+        role: 'HotelOwner'
       });
       
       localStorage.setItem('token', data.token);
@@ -69,8 +69,8 @@ export default function RegisterPage() {
         role: data.role
       }));
       
-      // Müşteri olarak kayıt olduğu için profile sayfasına yönlendir
-      router.push('/profile');
+      // Otel sahibi olarak kayıt olduğu için hotel-owner sayfasına yönlendir
+      router.push('/hotel-owner');
     } catch (error) {
       setError('Bağlantı hatası oluştu');
       console.error('Register error:', error);
@@ -90,7 +90,7 @@ export default function RegisterPage() {
         </div>
         
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Yeni hesap oluşturun
+          Otel Sahibi Hesabı Oluşturun
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Veya{' '}
@@ -216,7 +216,7 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Hesap oluşturuluyor...' : 'Hesap Oluştur'}
+                {loading ? 'Hesap oluşturuluyor...' : 'Otel Sahibi Hesabı Oluştur'}
               </button>
             </div>
           </form>
@@ -233,7 +233,7 @@ export default function RegisterPage() {
 
             <div className="mt-6 bg-blue-50 p-4 rounded-md">
               <p className="text-sm text-blue-800">
-                <strong>Not:</strong> Yeni oluşturulan hesaplar otomatik olarak onaylanır. 
+                <strong>Not:</strong> Otel sahibi hesabınız oluşturulduktan sonra admin onayı gerekebilir. 
                 Demo amaçlı kullanım için basit şifreler kullanabilirsiniz.
               </p>
             </div>

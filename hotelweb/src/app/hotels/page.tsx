@@ -14,15 +14,26 @@ export default function HotelsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [searchFilters, setSearchFilters] = useState({
     city: searchParams.get('city') || '',
     checkIn: searchParams.get('checkIn') || '',
     checkOut: searchParams.get('checkOut') || '',
-    guests: parseInt(searchParams.get('guests') || '1')
+    guests: parseInt(searchParams.get('guests') || '1'),
+    minPrice: parseInt(searchParams.get('minPrice') || '0'),
+    maxPrice: parseInt(searchParams.get('maxPrice') || '10000'),
+    minStars: parseInt(searchParams.get('minStars') || '0'),
+    sortBy: searchParams.get('sortBy') || 'rating',
+    sortOrder: searchParams.get('sortOrder') || 'desc'
   });
 
   useEffect(() => {
     fetchHotels();
+    // Kullanıcı bilgilerini al
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
   }, [searchFilters]);
 
   const fetchHotels = async () => {
@@ -32,10 +43,23 @@ export default function HotelsPage() {
       // API parametrelerini hazırla
       const params = new URLSearchParams();
       if (searchFilters.city) params.append('city', searchFilters.city);
-      if (searchFilters.city) params.append('status', 'Approved'); // Sadece onaylanmış oteller
+      if (searchFilters.checkIn) params.append('checkIn', searchFilters.checkIn);
+      if (searchFilters.checkOut) params.append('checkOut', searchFilters.checkOut);
+      if (searchFilters.guests > 1) params.append('guests', searchFilters.guests.toString());
+      if (searchFilters.minPrice > 0) params.append('minPrice', searchFilters.minPrice.toString());
+      if (searchFilters.maxPrice < 10000) params.append('maxPrice', searchFilters.maxPrice.toString());
+      if (searchFilters.minStars > 0) params.append('minStars', searchFilters.minStars.toString());
+      if (searchFilters.sortBy) params.append('sortBy', searchFilters.sortBy);
+      if (searchFilters.sortOrder) params.append('sortOrder', searchFilters.sortOrder);
       
       const response = await api.get(`/api/hotels?${params.toString()}`);
-      setHotels(response.data);
+      
+      // Yeni API response formatı
+      if (response.data.hotels) {
+        setHotels(response.data.hotels);
+      } else {
+        setHotels(response.data);
+      }
     } catch (error) {
       console.error('Otel listesi alınamadı:', error);
     } finally {
@@ -78,12 +102,6 @@ export default function HotelsPage() {
                 >
                   Ana Sayfa
                 </Link>
-                <Link 
-                  href="/hotels" 
-                  className="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Oteller
-                </Link>
                 <button
                   onClick={() => {
                     const searchSection = document.getElementById('search-section');
@@ -95,12 +113,35 @@ export default function HotelsPage() {
                 >
                   Otel Ara
                 </button>
-                <Link 
-                  href="/admin" 
-                  className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Admin
-                </Link>
+                {user && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white text-sm">
+                      Hoş geldin, {user.firstName} {user.lastName}
+                    </span>
+                    <Link 
+                      href="/profile" 
+                      className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Profil
+                    </Link>
+                  </div>
+                )}
+                {!user && (
+                  <div className="flex items-center space-x-2">
+                    <Link 
+                      href="/login" 
+                      className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Giriş Yap
+                    </Link>
+                    <Link 
+                      href="/register" 
+                      className="bg-white hover:bg-gray-100 text-indigo-600 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                    >
+                      Kayıt Ol
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -132,12 +173,6 @@ export default function HotelsPage() {
               >
                 Ana Sayfa
               </Link>
-              <Link 
-                href="/hotels" 
-                className="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Oteller
-              </Link>
               <button
                 onClick={() => {
                   const searchSection = document.getElementById('search-section');
@@ -149,12 +184,41 @@ export default function HotelsPage() {
               >
                 Otel Ara
               </button>
-              <Link 
-                href="/admin" 
-                className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Admin
-              </Link>
+              {user && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-white text-sm">
+                    Hoş geldin, {user.firstName} {user.lastName}
+                  </span>
+                  <Link 
+                    href="/profile" 
+                    className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Profil
+                  </Link>
+                  <Link 
+                    href="/my-reservations" 
+                    className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Rezervasyonlarım
+                  </Link>
+                </div>
+              )}
+              {!user && (
+                <div className="flex items-center space-x-2">
+                  <Link 
+                    href="/login" 
+                    className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="bg-white hover:bg-gray-100 text-indigo-600 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  >
+                    Kayıt Ol
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

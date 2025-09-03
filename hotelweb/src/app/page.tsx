@@ -65,7 +65,7 @@ export default function Home() {
                         Profilim
                       </Link>
                       <Link
-                        href="/reservation"
+                        href="/my-reservations"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsDropdownOpen(false)}
                       >
@@ -97,14 +97,6 @@ export default function Home() {
                   Admin
                 </Link>
               )}
-              {userRole === 'HotelOwner' && (
-                <Link 
-                  href="/hotel-owner" 
-                  className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Otel Sahibi Paneli
-                </Link>
-              )}
             </div>
           </div>
         </div>
@@ -117,7 +109,7 @@ export default function Home() {
             <main className="mt-4 mx-auto max-w-7xl px-4 sm:mt-6 sm:px-6 md:mt-8 lg:mt-12 lg:px-8 xl:mt-16">
               <div className="text-center">
                 <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block xl:inline">AlkanlaKal</span>
+                  <span className="block xl:inline">#AlkanlaKal</span>
                 </h1>
                 <p className="mt-2 text-base text-gray-500 sm:mt-3 sm:text-lg sm:max-w-2xl sm:mx-auto md:mt-4 md:text-xl">
                   En iyi otelleri keşfedin, yorumları okuyun ve güvenle rezervasyon yapın. 
@@ -145,6 +137,23 @@ export default function Home() {
       {/* Features Section */}
       <div className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Hotel Owner Notice */}
+          <div className="text-center mb-12">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-8 border border-indigo-200">
+              <h3 className="text-2xl font-bold text-indigo-900 mb-4">
+                Tesisiniz Alkan Rezervation'da yer almıyor mu?
+              </h3>
+              <p className="text-lg text-indigo-700 mb-6">
+                Otelinizi platformumuza ekleyerek daha fazla müşteriye ulaşın
+              </p>
+              <Link href="/register/hotel-owner" className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+                Üye Ol
+              </Link>
+            </div>
+          </div>
+
+
+
           <div className="lg:text-center">
             <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Özellikler</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">

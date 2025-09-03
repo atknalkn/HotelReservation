@@ -34,7 +34,8 @@ namespace HotelApi.Data
 
             modelBuilder.Entity<Hotel>()
                 .HasIndex(h => h.TaxNo)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("\"TaxNo\" IS NOT NULL AND \"TaxNo\" != ''");
 
             // (Varsa) Property -> Hotel FK
             modelBuilder.Entity<Property>()

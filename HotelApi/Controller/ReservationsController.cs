@@ -54,7 +54,7 @@ namespace HotelApi.Controller
                     TotalPrice = r.TotalPrice,
                     Status = r.Status.ToString(),
                     CreatedAt = r.CreatedAt,
-                    TotalNights = (r.CheckOut - r.CheckIn).Days
+                    TotalNights = 0 // Client-side'da hesaplanacak
                 })
                 .ToListAsync();
 
@@ -103,7 +103,7 @@ namespace HotelApi.Controller
 
         // GET: api/Reservations/user/5
         [HttpGet("user/{userId}")]
-        [Authorize(Policy = "CustomerOnly")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<ReservationResponseDto>>> GetReservationsByUser(int userId)
         {
             // JWT token'dan user ID'yi al
@@ -143,26 +143,37 @@ namespace HotelApi.Controller
                     TotalPrice = r.TotalPrice,
                     Status = r.Status.ToString(),
                     CreatedAt = r.CreatedAt,
-                    TotalNights = (r.CheckOut - r.CheckIn).Days
+                    TotalNights = 0 // Client-side'da hesaplanacak
                 })
                 .ToListAsync();
+
+            // TotalNights'i client-side'da hesapla
+            foreach (var reservation in reservations)
+            {
+                reservation.TotalNights = (reservation.CheckOut - reservation.CheckIn).Days;
+            }
 
             return reservations;
         }
 
         // GET: api/Reservations/my-reservations
         [HttpGet("my-reservations")]
-        [Authorize(Policy = "CustomerOnly")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<ReservationResponseDto>>> GetMyReservations()
         {
             try
             {
                 // JWT token'dan user ID'yi al
                 var userIdClaim = HttpContext.User.FindFirst("UserId");
+                _logger.LogInformation("GetMyReservations - UserIdClaim: {UserIdClaim}", userIdClaim?.Value);
+                
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
                 {
+                    _logger.LogWarning("GetMyReservations - Invalid or missing UserId claim");
                     return Unauthorized();
                 }
+                
+                _logger.LogInformation("GetMyReservations - CurrentUserId: {CurrentUserId}", currentUserId);
 
                 var reservations = await _context.Reservations
                     .Include(r => r.User)
@@ -188,10 +199,17 @@ namespace HotelApi.Controller
                         TotalPrice = r.TotalPrice,
                         Status = r.Status.ToString(),
                         CreatedAt = r.CreatedAt,
-                        TotalNights = (r.CheckOut - r.CheckIn).Days
+                        TotalNights = 0 // Client-side'da hesaplanacak
                     })
                     .ToListAsync();
 
+                // TotalNights'i client-side'da hesapla
+                foreach (var reservation in reservations)
+                {
+                    reservation.TotalNights = (reservation.CheckOut - reservation.CheckIn).Days;
+                }
+
+                _logger.LogInformation("GetMyReservations - Found {Count} reservations for user {UserId}", reservations.Count, currentUserId);
                 return reservations;
             }
             catch (Exception ex)
@@ -230,7 +248,7 @@ namespace HotelApi.Controller
                     TotalPrice = r.TotalPrice,
                     Status = r.Status.ToString(),
                     CreatedAt = r.CreatedAt,
-                    TotalNights = (r.CheckOut - r.CheckIn).Days
+                    TotalNights = 0 // Client-side'da hesaplanacak
                 })
                 .ToListAsync();
 
@@ -239,12 +257,32 @@ namespace HotelApi.Controller
 
         // POST: api/Reservations
         [HttpPost]
-        [Authorize(Policy = "CustomerOnly")]
+        [Authorize]
         public async Task<ActionResult<ReservationResponseDto>> PostReservation(ReservationDto reservationDto)
         {
             try
             {
-                // Validasyonlar
+                // Temel validasyonlar
+                if (reservationDto.UserId <= 0)
+                {
+                    return BadRequest("Geçersiz kullanıcı ID'si");
+                }
+
+                if (reservationDto.HotelId <= 0)
+                {
+                    return BadRequest("Geçersiz otel ID'si");
+                }
+
+                if (reservationDto.PropertyId <= 0)
+                {
+                    return BadRequest("Geçersiz property ID'si");
+                }
+
+                if (reservationDto.RoomTypeId <= 0)
+                {
+                    return BadRequest("Geçersiz oda tipi ID'si");
+                }
+
                 if (reservationDto.CheckIn >= reservationDto.CheckOut)
                 {
                     return BadRequest("Check-in tarihi Check-out tarihinden önce olmalıdır");
@@ -425,7 +463,7 @@ namespace HotelApi.Controller
 
         // PUT: api/Reservations/5/cancel
         [HttpPut("{id}/cancel")]
-        [Authorize(Policy = "CustomerOnly")]
+        [Authorize]
         public async Task<IActionResult> CancelReservation(int id)
         {
             try

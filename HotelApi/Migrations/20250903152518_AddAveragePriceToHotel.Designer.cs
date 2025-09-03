@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HotelApi.Migrations
 {
     [DbContext(typeof(HotelDbContext))]
-    [Migration("20250829213118_AddFirstNameLastNameToUser")]
-    partial class AddFirstNameLastNameToUser
+    [Migration("20250903152518_AddAveragePriceToHotel")]
+    partial class AddAveragePriceToHotel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -103,6 +103,10 @@ namespace HotelApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Amenities")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<decimal>("AverageCleanlinessRating")
                         .HasColumnType("numeric");
 
@@ -112,11 +116,22 @@ namespace HotelApi.Migrations
                     b.Property<decimal>("AverageOverallRating")
                         .HasColumnType("numeric");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasColumnType("numeric");
+
                     b.Property<decimal>("AverageServiceRating")
                         .HasColumnType("numeric");
 
                     b.Property<decimal>("AverageValueRating")
                         .HasColumnType("numeric");
+
+                    b.Property<string>("CheckInTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CheckOutTime")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("City")
                         .IsRequired()
@@ -125,12 +140,28 @@ namespace HotelApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("OwnerUserId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Policies")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("StarRating")
                         .HasColumnType("integer");
@@ -146,12 +177,17 @@ namespace HotelApi.Migrations
                     b.Property<int>("TotalReviews")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Website")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerUserId");
 
                     b.HasIndex("TaxNo")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"TaxNo\" IS NOT NULL AND \"TaxNo\" != ''");
 
                     b.ToTable("Hotels");
                 });
@@ -409,6 +445,9 @@ namespace HotelApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -417,11 +456,23 @@ namespace HotelApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IdentityNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("text");
 

@@ -91,12 +91,6 @@ export default function ReservationSuccessPage() {
               </Link>
               <Link 
                 href="/hotels" 
-                className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Oteller
-              </Link>
-              <Link 
-                href="/hotels" 
                 className="bg-white hover:bg-gray-100 text-indigo-600 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Otel Ara
@@ -130,49 +124,49 @@ export default function ReservationSuccessPage() {
                 {/* Sol Taraf */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Rezervasyon No</label>
-                    <p className="text-lg font-semibold text-gray-900">#{reservation.id}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Rezervasyon No</label>
+                    <p className="text-lg font-bold text-black">#{reservation.id}</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Otel</label>
-                    <p className="text-lg font-semibold text-gray-900">{reservation.hotelName}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Otel</label>
+                    <p className="text-lg font-bold text-black">{reservation.hotelName}</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Property</label>
-                    <p className="text-lg font-semibold text-gray-900">{reservation.propertyTitle}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Property</label>
+                    <p className="text-lg font-bold text-black">{reservation.propertyTitle}</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Kişi Sayısı</label>
-                    <p className="text-lg font-semibold text-gray-900">{reservation.guests} kişi</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kişi Sayısı</label>
+                    <p className="text-lg font-bold text-black">{reservation.guests} kişi</p>
                   </div>
                 </div>
 
                 {/* Sağ Taraf */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Giriş Tarihi</label>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Giriş Tarihi</label>
+                    <p className="text-lg font-bold text-black">
                       {new Date(reservation.checkIn).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Çıkış Tarihi</label>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Çıkış Tarihi</label>
+                    <p className="text-lg font-bold text-black">
                       {new Date(reservation.checkOut).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Toplam Fiyat</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Toplam Fiyat</label>
                     <p className="text-2xl font-bold text-indigo-600">₺{reservation.totalPrice}</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Durum</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Durum</label>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       {reservation.status}
                     </span>

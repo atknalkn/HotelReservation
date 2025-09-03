@@ -52,9 +52,10 @@ export default function PropertyDetailPage() {
         const roomTypesResponse = await api.get(`/api/roomtypes/ByProperty/${propertiesResponse.data[0].id}`);
         setRoomTypes(roomTypesResponse.data);
         
-        // Availability bilgilerini al
+        // Availability bilgilerini al - sadece bu property için
         if (roomTypesResponse.data.length > 0) {
-          const availabilityResponse = await api.get('/api/availabilities');
+          const roomTypeIds = roomTypesResponse.data.map((rt: any) => rt.id).join(',');
+          const availabilityResponse = await api.get(`/api/availabilities?roomTypeIds=${roomTypeIds}`);
           setAvailabilities(availabilityResponse.data);
         }
       }
@@ -74,6 +75,13 @@ export default function PropertyDetailPage() {
       try {
         const roomTypesResponse = await api.get(`/api/roomtypes/ByProperty/${propertyId}`);
         setRoomTypes(roomTypesResponse.data);
+        
+        // Yeni oda tipleri için availability bilgilerini al
+        if (roomTypesResponse.data.length > 0) {
+          const roomTypeIds = roomTypesResponse.data.map((rt: any) => rt.id).join(',');
+          const availabilityResponse = await api.get(`/api/availabilities?roomTypeIds=${roomTypeIds}`);
+          setAvailabilities(availabilityResponse.data);
+        }
       } catch (error) {
         console.error('Oda tipleri alınamadı:', error);
       }
@@ -133,21 +141,9 @@ export default function PropertyDetailPage() {
               </Link>
               <Link 
                 href="/hotels" 
-                className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Oteller
-              </Link>
-              <Link 
-                href="/hotels" 
                 className="bg-white hover:bg-gray-100 text-indigo-600 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Otel Ara
-              </Link>
-              <Link 
-                href="/admin" 
-                className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Admin
               </Link>
             </div>
           </div>

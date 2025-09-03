@@ -21,11 +21,17 @@ namespace HotelApi.Controller
         // GET: api/Availabilities
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<Availability>>> GetAvailabilities()
+        public async Task<ActionResult<IEnumerable<Availability>>> GetAvailabilities([FromQuery] string? roomTypeIds)
         {
-            return await _context.Availabilities
-                .Include(a => a.RoomType)
-                .ToListAsync();
+            var query = _context.Availabilities.Include(a => a.RoomType).AsQueryable();
+            
+            if (!string.IsNullOrEmpty(roomTypeIds))
+            {
+                var ids = roomTypeIds.Split(',').Select(int.Parse).ToList();
+                query = query.Where(a => ids.Contains(a.RoomTypeId));
+            }
+            
+            return await query.ToListAsync();
         }
 
         // GET: api/Availabilities/5
@@ -105,39 +111,70 @@ namespace HotelApi.Controller
                     return Forbid("Bu oda tipi size ait değil");
                 }
 
-                // Aynı RoomType için aynı tarihte Availability var mı kontrol et
-                var existingAvailability = await _context.Availabilities
-                    .FirstOrDefaultAsync(a => a.RoomTypeId == availabilityDto.RoomTypeId && a.Date.Date == availabilityDto.Date.Date);
-                
-                if (existingAvailability != null)
+                // Tarih aralığı kontrolü
+                DateTime startDate, endDate;
+                if (availabilityDto.StartDate.HasValue && availabilityDto.EndDate.HasValue)
                 {
-                    return BadRequest("Bu RoomType için bu tarihte zaten Availability kaydı mevcut");
+                    startDate = availabilityDto.StartDate.Value.Date;
+                    endDate = availabilityDto.EndDate.Value.Date;
+                    
+                    if (startDate > endDate)
+                    {
+                        return BadRequest("Başlangıç tarihi bitiş tarihinden sonra olamaz");
+                    }
+                }
+                else
+                {
+                    // Tek tarih için eski mantık
+                    startDate = endDate = availabilityDto.Date.Date;
                 }
 
-                var availability = new Availability
-                {
-                    RoomTypeId = availabilityDto.RoomTypeId,
-                    Date = availabilityDto.Date.Date, // Sadece tarih kısmını al, time zone sorununu önle
-                    Stock = availabilityDto.Stock,
-                    PriceOverride = availabilityDto.PriceOverride
-                };
+                var createdAvailabilities = new List<Availability>();
 
-            _context.Availabilities.Add(availability);
+                // Her gün için availability oluştur
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    // Aynı RoomType için aynı tarihte Availability var mı kontrol et
+                    var existingAvailability = await _context.Availabilities
+                        .FirstOrDefaultAsync(a => a.RoomTypeId == availabilityDto.RoomTypeId && a.Date.Date == date);
+                    
+                    if (existingAvailability != null)
+                    {
+                        return BadRequest($"Bu RoomType için {date:dd.MM.yyyy} tarihinde zaten Availability kaydı mevcut");
+                    }
+
+                    var availability = new Availability
+                    {
+                        RoomTypeId = availabilityDto.RoomTypeId,
+                        Date = date,
+                        Stock = availabilityDto.Stock,
+                        PriceOverride = availabilityDto.PriceOverride
+                    };
+
+                    _context.Availabilities.Add(availability);
+                    createdAvailabilities.Add(availability);
+                }
+
             await _context.SaveChangesAsync();
 
-            // Response DTO oluştur
+            // Response DTO oluştur - ilk oluşturulan availability'yi döndür
+            var firstAvailability = createdAvailabilities.First();
             var responseDto = new AvailabilityResponseDto
             {
-                Id = availability.Id,
-                RoomTypeId = availability.RoomTypeId,
+                Id = firstAvailability.Id,
+                RoomTypeId = firstAvailability.RoomTypeId,
                 RoomTypeName = roomType.Name,
-                Date = availability.Date,
-                Stock = availability.Stock,
-                PriceOverride = availability.PriceOverride,
-                EffectivePrice = availability.PriceOverride ?? roomType.BasePrice
+                Date = firstAvailability.Date,
+                Stock = firstAvailability.Stock,
+                PriceOverride = firstAvailability.PriceOverride,
+                EffectivePrice = firstAvailability.PriceOverride ?? roomType.BasePrice
             };
 
-            return CreatedAtAction(nameof(GetAvailability), new { id = availability.Id }, responseDto);
+            return Ok(new { 
+                message = $"{createdAvailabilities.Count} gün için müsaitlik oluşturuldu",
+                createdCount = createdAvailabilities.Count,
+                firstAvailability = responseDto
+            });
             }
             catch (Exception ex)
             {

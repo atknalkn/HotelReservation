@@ -7,7 +7,9 @@ export interface HotelFilters {
   rating: number;
   capacity: number;
   amenities: string[];
-  sortBy: 'price' | 'rating' | 'name' | 'distance';
+  sortBy: 'price' | 'rating' | 'name' | 'stars';
+  sortOrder: 'asc' | 'desc';
+  minStars: number;
 }
 
 interface HotelFiltersProps {
@@ -115,19 +117,46 @@ export function HotelFilters({ filters, onFiltersChange }: HotelFiltersProps) {
             </select>
           </div>
 
+          {/* Yıldız Filtresi */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Minimum Yıldız</h4>
+            <select
+              value={filters.minStars}
+              onChange={(e) => handleFilterChange('minStars', parseInt(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value={0}>Tümü</option>
+              <option value={1}>1+ Yıldız</option>
+              <option value={2}>2+ Yıldız</option>
+              <option value={3}>3+ Yıldız</option>
+              <option value={4}>4+ Yıldız</option>
+              <option value={5}>5 Yıldız</option>
+            </select>
+          </div>
+
           {/* Sıralama */}
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-3">Sıralama</h4>
-            <select
-              value={filters.sortBy}
-              onChange={(e) => handleFilterChange('sortBy', e.target.value as HotelFilters['sortBy'])}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="rating">Puana Göre</option>
-              <option value="price">Fiyata Göre</option>
-              <option value="name">İsme Göre</option>
-              <option value="distance">Mesafeye Göre</option>
-            </select>
+            <div className="space-y-2">
+              <select
+                value={filters.sortBy}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value as HotelFilters['sortBy'])}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="rating">Puana Göre</option>
+                <option value="price">Fiyata Göre</option>
+                <option value="name">İsme Göre</option>
+                <option value="stars">Yıldıza Göre</option>
+              </select>
+              <select
+                value={filters.sortOrder}
+                onChange={(e) => handleFilterChange('sortOrder', e.target.value as HotelFilters['sortOrder'])}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="desc">Yüksekten Düşüğe</option>
+                <option value="asc">Düşükten Yükseğe</option>
+              </select>
+            </div>
           </div>
 
           {/* Özellikler */}

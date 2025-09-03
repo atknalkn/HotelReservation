@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Hotel, Property, RoomType } from '@/lib/types';
 import Link from 'next/link';
 
@@ -62,6 +62,25 @@ export function ReservationForm({
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Kullanıcı bilgilerini otomatik doldur
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        // Adres bilgileri genelde profilde yok, kullanıcı doldurur
+        address: prev.address,
+        city: prev.city,
+        postalCode: prev.postalCode
+      }));
+    }
+  }, []);
 
   // Form validasyonu
   const validateForm = (): boolean => {
@@ -142,10 +161,27 @@ export function ReservationForm({
     }
   };
 
+  // Otomatik doldurulan alan sayısını hesapla
+  const autoFilledFields = [formData.firstName, formData.lastName, formData.email, formData.phone].filter(field => field).length;
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Kişisel Bilgiler</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Kişisel Bilgiler</h2>
+        
+        {autoFilledFields > 0 && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-green-800">
+                <span className="font-medium">{autoFilledFields} alan</span> profilinizden otomatik dolduruldu. 
+                Eksik bilgileri tamamlayın.
+              </p>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Oda Tipi Seçimi */}
@@ -193,7 +229,8 @@ export function ReservationForm({
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  errors.firstName ? 'border-red-300' : 'border-gray-300'
+                  errors.firstName ? 'border-red-300' : 
+                  formData.firstName ? 'border-green-300 bg-green-50' : 'border-gray-300'
                 }`}
                 placeholder="Adınız"
               />
@@ -211,7 +248,8 @@ export function ReservationForm({
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  errors.lastName ? 'border-red-300' : 'border-gray-300'
+                  errors.lastName ? 'border-red-300' : 
+                  formData.lastName ? 'border-green-300 bg-green-50' : 'border-gray-300'
                 }`}
                 placeholder="Soyadınız"
               />
@@ -231,7 +269,8 @@ export function ReservationForm({
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
+                  errors.email ? 'border-red-300' : 
+                  formData.email ? 'border-green-300 bg-green-50' : 'border-gray-300'
                 }`}
                 placeholder="ornek@email.com"
               />
@@ -249,7 +288,8 @@ export function ReservationForm({
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  errors.phone ? 'border-red-300' : 'border-gray-300'
+                  errors.phone ? 'border-red-300' : 
+                  formData.phone ? 'border-green-300 bg-green-50' : 'border-gray-300'
                 }`}
                 placeholder="+90 555 123 45 67"
               />

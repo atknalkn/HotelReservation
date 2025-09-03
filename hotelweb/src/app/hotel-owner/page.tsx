@@ -25,6 +25,13 @@ interface RoomType {
   propertyTitle: string;
 }
 
+interface Property {
+  id: number;
+  title: string;
+  hotelId: number;
+  hotelName: string;
+}
+
 interface Availability {
   id: number;
   roomTypeId: number;
@@ -53,6 +60,7 @@ interface Reservation {
 
 export default function HotelOwnerPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -66,6 +74,7 @@ export default function HotelOwnerPage() {
     hotelName: '',
     hotelCity: '',
     hotelAddress: '',
+    hotelTaxNo: '',
     hotelStarRating: 3,
     hotelDescription: '',
     hotelPhone: '',
@@ -80,8 +89,11 @@ export default function HotelOwnerPage() {
     roomDescription: '',
     roomCapacity: 2,
     roomBasePrice: 0,
+    roomPropertyId: 0,
     // Availability form data
-    availabilityDate: '',
+    availabilityRoomTypeId: 0,
+    availabilityStartDate: '',
+    availabilityEndDate: '',
     availabilityStock: 1,
     availabilityPriceOverride: ''
   });
@@ -173,13 +185,15 @@ export default function HotelOwnerPage() {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [hotelsRes, roomTypesRes, availabilitiesRes] = await Promise.all([
+      const [hotelsRes, propertiesRes, roomTypesRes, availabilitiesRes] = await Promise.all([
         api.get('/api/hotels/my-hotels', { headers }),
+        api.get('/api/properties/my-properties', { headers }),
         api.get('/api/roomtypes/my-room-types', { headers }),
         api.get('/api/availabilities/my-availabilities', { headers })
       ]);
 
       setHotels(hotelsRes.data);
+      setProperties(propertiesRes.data);
       setRoomTypes(roomTypesRes.data);
       setAvailabilities(availabilitiesRes.data);
 
@@ -218,19 +232,53 @@ export default function HotelOwnerPage() {
     setShowAddForm(true);
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const createPropertiesForExistingHotels = async () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
+      
+      const response = await api.post('/api/hotels/create-properties-for-existing-hotels', {}, { headers });
+      console.log('Properties created:', response.data);
+      alert('Property\'ler oluşturuldu!');
+      
+      // Verileri yeniden çek
+      await fetchData();
+    } catch (error) {
+      console.error('Property oluşturma hatası:', error);
+      alert('Property oluşturulurken hata oluştu');
+    }
+  };
+
+  const handleFormSubmit = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Giriş yapmanız gerekiyor');
+        return;
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      console.log('Form data being sent:', formData);
+      console.log('Form type:', formType);
 
       switch (formType) {
         case 'hotel':
-          await api.post('/api/hotels', {
+          console.log('Sending hotel data to backend...');
+          
+          // JWT token'dan user ID'yi çıkar
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          const currentUserId = tokenPayload.UserId;
+          
+          const hotelData = {
+            ownerUserId: currentUserId,
             name: formData.hotelName,
             city: formData.hotelCity,
             address: formData.hotelAddress,
+            taxNo: formData.hotelTaxNo,
             starRating: formData.hotelStarRating,
             description: formData.hotelDescription,
             phone: formData.hotelPhone,
@@ -240,33 +288,73 @@ export default function HotelOwnerPage() {
             checkInTime: formData.hotelCheckInTime,
             checkOutTime: formData.hotelCheckOutTime,
             policies: formData.hotelPolicies
-          }, { headers });
+          };
+          console.log('Hotel data to send:', hotelData);
+          
+          const hotelResponse = await api.post('/api/hotels', hotelData, { headers });
+          console.log('Hotel creation response:', hotelResponse.data);
+          alert('Otel başarıyla eklendi!');
           break;
         case 'room':
-          if (!selectedHotel) {
-            alert('Önce bir otel seçin');
+          if (!formData.roomPropertyId) {
+            alert('Lütfen bir otel seçin!');
             return;
           }
-          await api.post('/api/roomtypes', {
+          
+          // Eğer property yoksa otomatik oluştur
+          if (properties.length === 0) {
+            try {
+              await createPropertiesForExistingHotels();
+            } catch (error) {
+              alert('Property oluşturulurken hata oluştu. Lütfen tekrar deneyin.');
+              return;
+            }
+          }
+          
+          console.log('Sending room data to backend...');
+          const roomResponse = await api.post('/api/roomtypes', {
+            propertyId: formData.roomPropertyId,
             name: formData.roomName,
             description: formData.roomDescription,
             capacity: formData.roomCapacity,
-            basePrice: formData.roomBasePrice,
-            hotelId: selectedHotel.id
+            basePrice: formData.roomBasePrice
           }, { headers });
+          console.log('Room creation response:', roomResponse.data);
+          alert('Oda tipi başarıyla eklendi!');
           break;
         case 'availability':
-          // Availability ekleme için gerekli veriler
+          if (!formData.availabilityRoomTypeId) {
+            alert('Lütfen bir oda tipi seçin!');
+            return;
+          }
+          if (!formData.availabilityStartDate || !formData.availabilityEndDate) {
+            alert('Lütfen başlangıç ve bitiş tarihlerini seçin!');
+            return;
+          }
+          if (new Date(formData.availabilityStartDate) > new Date(formData.availabilityEndDate)) {
+            alert('Başlangıç tarihi bitiş tarihinden sonra olamaz!');
+            return;
+          }
+          
+          console.log('Sending availability data to backend...');
+          const availabilityResponse = await api.post('/api/availabilities', {
+            roomTypeId: formData.availabilityRoomTypeId,
+            startDate: formData.availabilityStartDate,
+            endDate: formData.availabilityEndDate,
+            stock: formData.availabilityStock,
+            priceOverride: formData.availabilityPriceOverride || null
+          }, { headers });
+          console.log('Availability creation response:', availabilityResponse.data);
+          alert('Müsaitlik başarıyla eklendi!');
           break;
       }
 
-      await fetchData();
-      setShowAddForm(false);
-      // Form verilerini temizle
+      // Reset form
       setFormData({
         hotelName: '',
         hotelCity: '',
         hotelAddress: '',
+        hotelTaxNo: '',
         hotelStarRating: 3,
         hotelDescription: '',
         hotelPhone: '',
@@ -280,13 +368,31 @@ export default function HotelOwnerPage() {
         roomDescription: '',
         roomCapacity: 2,
         roomBasePrice: 0,
-        availabilityDate: '',
+        roomPropertyId: 0,
+        availabilityRoomTypeId: 0,
+        availabilityStartDate: '',
+        availabilityEndDate: '',
         availabilityStock: 1,
         availabilityPriceOverride: ''
       });
-    } catch (error) {
-      console.error('Ekleme hatası:', error);
-      alert('Ekleme işlemi başarısız oldu');
+      setFormType(null);
+      setShowAddForm(false);
+    } catch (error: any) {
+      console.error('Form submission error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        alert(`Hata: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error('Request error:', error.request);
+        alert('Sunucuya bağlanılamadı. Lütfen tekrar deneyin.');
+      } else {
+        console.error('Other error:', error);
+        alert(`Beklenmeyen hata: ${error.message}`);
+      }
     }
   };
 
@@ -373,13 +479,13 @@ export default function HotelOwnerPage() {
           {/* Hotel Selection */}
           {hotels.length > 0 && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Otel Seçin
               </label>
               <select
                 value={selectedHotel?.id || ''}
                 onChange={(e) => handleHotelChange(Number(e.target.value))}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
               >
                 {hotels.map((hotel) => (
                   <option key={hotel.id} value={hotel.id}>
@@ -398,7 +504,7 @@ export default function HotelOwnerPage() {
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'hotels'
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-900 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Otellerim ({hotels.length})
@@ -408,7 +514,7 @@ export default function HotelOwnerPage() {
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'rooms'
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-900 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Oda Tiplerim ({roomTypes.length})
@@ -418,7 +524,7 @@ export default function HotelOwnerPage() {
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'availability'
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-900 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Müsaitlik ({availabilities.length})
@@ -428,7 +534,7 @@ export default function HotelOwnerPage() {
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'reservations'
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-900 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Rezervasyonlar ({reservations.length})
@@ -440,7 +546,7 @@ export default function HotelOwnerPage() {
           {activeTab === 'hotels' && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Otellerim</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Otellerim</h2>
                 <button
                   onClick={() => handleAddNew('hotel')}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -454,7 +560,7 @@ export default function HotelOwnerPage() {
                     <div key={hotel.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-lg">{hotel.name}</h3>
+                          <h3 className="font-semibold text-lg text-gray-900">{hotel.name}</h3>
                           <p className="text-gray-600">{hotel.city}</p>
                           <p className="text-sm text-gray-500">{hotel.address}</p>
                           <p className="text-xs text-gray-400">
@@ -485,7 +591,7 @@ export default function HotelOwnerPage() {
           {activeTab === 'rooms' && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Oda Tiplerim</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Oda Tiplerim</h2>
                 <button
                   onClick={() => handleAddNew('room')}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -499,7 +605,7 @@ export default function HotelOwnerPage() {
                     <div key={roomType.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-lg">{roomType.name}</h3>
+                          <h3 className="font-semibold text-lg text-gray-900">{roomType.name}</h3>
                           <p className="text-gray-600">{roomType.description}</p>
                           <p className="text-sm text-gray-500">
                             Kapasite: {roomType.capacity} kişi | Fiyat: {roomType.basePrice} TL
@@ -531,7 +637,7 @@ export default function HotelOwnerPage() {
           {activeTab === 'availability' && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Müsaitlik Yönetimi</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Müsaitlik Yönetimi</h2>
                 <button
                   onClick={() => handleAddNew('availability')}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -545,11 +651,11 @@ export default function HotelOwnerPage() {
                     <div key={availability.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-lg">{availability.roomTypeName}</h3>
+                          <h3 className="font-semibold text-lg text-gray-900">{availability.roomTypeName}</h3>
                           <p className="text-gray-600">{availability.propertyTitle}</p>
                           <p className="text-sm text-gray-500">
                             Tarih: {new Date(availability.date).toLocaleDateString('tr-TR')} | 
-                            Stok: {availability.stock} oda
+                            Günlük Stok: {availability.stock} oda
                           </p>
                           <p className="text-xs text-gray-400">
                             Otel: {availability.hotelName} | 
@@ -674,6 +780,18 @@ export default function HotelOwnerPage() {
                       onChange={(e) => setFormData({...formData, hotelAddress: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       rows={2}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vergi Numarası *</label>
+                    <input
+                      type="text"
+                      value={formData.hotelTaxNo}
+                      onChange={(e) => setFormData({...formData, hotelTaxNo: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                      placeholder="1234567890"
+                      maxLength={10}
                       required
                     />
                   </div>
@@ -807,11 +925,28 @@ export default function HotelOwnerPage() {
                       placeholder="Otel kuralları ve politikaları..."
                     />
                   </div>
+                  
                 </>
               )}
 
               {formType === 'room' && (
                 <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Otel Seçin *</label>
+                    <select
+                      value={formData.roomPropertyId}
+                      onChange={(e) => setFormData({...formData, roomPropertyId: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      required
+                    >
+                      <option value={0}>Otel seçin...</option>
+                      {properties.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {property.title} - {property.hotelName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Oda Tipi Adı</label>
                     <input
@@ -854,6 +989,76 @@ export default function HotelOwnerPage() {
                       onChange={(e) => setFormData({...formData, roomBasePrice: Number(e.target.value)})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       required
+                    />
+                  </div>
+                </>
+              )}
+
+              {formType === 'availability' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Oda Tipi Seçin *</label>
+                    <select
+                      value={formData.availabilityRoomTypeId}
+                      onChange={(e) => setFormData({...formData, availabilityRoomTypeId: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      required
+                    >
+                      <option value={0}>Oda tipi seçin...</option>
+                      {roomTypes.map((roomType) => (
+                        <option key={roomType.id} value={roomType.id}>
+                          {roomType.name} - {roomType.propertyTitle}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Başlangıç Tarihi *</label>
+                      <input
+                        type="date"
+                        value={formData.availabilityStartDate}
+                        onChange={(e) => setFormData({...formData, availabilityStartDate: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Bitiş Tarihi *</label>
+                      <input
+                        type="date"
+                        value={formData.availabilityEndDate}
+                        onChange={(e) => setFormData({...formData, availabilityEndDate: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Günlük Stok Sayısı *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.availabilityStock}
+                      onChange={(e) => setFormData({...formData, availabilityStock: Number(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                      placeholder="Her gün için kaç oda müsait"
+                      required
+                    />
+                    <p className="text-sm text-gray-600 mt-1">
+                      Bu sayı seçilen tarih aralığındaki her gün için geçerli olacak
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Özel Fiyat (TL) - Opsiyonel</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.availabilityPriceOverride}
+                      onChange={(e) => setFormData({...formData, availabilityPriceOverride: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                      placeholder="Boş bırakırsanız varsayılan fiyat kullanılır"
                     />
                   </div>
                 </>

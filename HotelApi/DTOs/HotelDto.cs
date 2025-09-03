@@ -10,6 +10,14 @@ namespace HotelApi.DTOs
         public string Address { get; set; } = "";
         public string TaxNo { get; set; } = "";
         public int StarRating { get; set; } = 3;
+        public string Description { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Website { get; set; } = "";
+        public string Amenities { get; set; } = "";
+        public string CheckInTime { get; set; } = "14:00";
+        public string CheckOutTime { get; set; } = "11:00";
+        public string Policies { get; set; } = "";
         // Status artık admin tarafından yönetilir, burada değiştirilemez
     }
 

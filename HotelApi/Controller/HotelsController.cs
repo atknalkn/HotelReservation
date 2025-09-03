@@ -17,21 +17,123 @@ namespace HotelApi.Controllers
         // GET: api/hotels
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAll([FromQuery] string? city, [FromQuery] HotelStatus? status)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? city, 
+            [FromQuery] HotelStatus? status,
+            [FromQuery] DateTime? checkIn,
+            [FromQuery] DateTime? checkOut,
+            [FromQuery] int guests = 1,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] int? minStars = null,
+            [FromQuery] string? sortBy = "rating",
+            [FromQuery] string? sortOrder = "desc",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 12)
         {
             var q = _context.Hotels.AsQueryable();
 
+            // Sadece onaylanmış otelleri göster (güvenlik için)
+            q = q.Where(h => h.Status == HotelStatus.Approved);
+
+            // Şehir filtresi
             if (!string.IsNullOrWhiteSpace(city))
                 q = q.Where(h => h.City.ToLower().Contains(city.ToLower()));
 
-            if (status.HasValue)
-                q = q.Where(h => h.Status == status.Value);
+            // Yıldız filtresi
+            if (minStars.HasValue)
+                q = q.Where(h => h.StarRating >= minStars.Value);
 
-            var list = await q
-                .Include(h => h.OwnerUser) // İstersen kaldır
-                .ToListAsync();
+            // Müsaitlik kontrolü (tarih ve kişi sayısı) - Sadece tarih seçilmişse
+            if (checkIn.HasValue && checkOut.HasValue)
+            {
+                // Availability verisi olan oteller için müsaitlik kontrolü yap
+                var hotelsWithAvailability = await _context.Availabilities
+                    .Where(a => a.Date >= checkIn.Value && a.Date < checkOut.Value && a.Stock >= guests)
+                    .Select(a => a.RoomType.Property.HotelId)
+                    .Distinct()
+                    .ToListAsync();
 
-            return Ok(list);
+                // Availability verisi olmayan otelleri de dahil et
+                var hotelsWithoutAvailability = await _context.Hotels
+                    .Where(h => !_context.Availabilities.Any(a => a.RoomType.Property.HotelId == h.Id))
+                    .Select(h => h.Id)
+                    .ToListAsync();
+
+                var availableHotelIds = hotelsWithAvailability.Union(hotelsWithoutAvailability).ToList();
+                q = q.Where(h => availableHotelIds.Contains(h.Id));
+            }
+
+            // Fiyat filtresi için önce ortalama fiyatları hesapla
+            var hotelsWithPrices = new List<dynamic>();
+            var hotels = await q.Include(h => h.OwnerUser).ToListAsync();
+
+            foreach (var hotel in hotels)
+            {
+                // Entity Framework uyumlu sorgu
+                var availabilities = await _context.Availabilities
+                    .Where(a => a.RoomType.Property.HotelId == hotel.Id)
+                    .Select(a => new { 
+                        PriceOverride = a.PriceOverride, 
+                        BasePrice = a.RoomType.BasePrice 
+                    })
+                    .ToListAsync();
+                
+                var prices = availabilities.Select(a => a.PriceOverride ?? a.BasePrice).ToList();
+                var averagePrice = prices.Any() ? prices.Average() : 0;
+                
+                hotel.AveragePrice = averagePrice > 0 ? (decimal)averagePrice : null;
+
+                // Fiyat filtresi
+                if (minPrice.HasValue && hotel.AveragePrice.HasValue && hotel.AveragePrice < minPrice.Value)
+                    continue;
+                if (maxPrice.HasValue && hotel.AveragePrice.HasValue && hotel.AveragePrice > maxPrice.Value)
+                    continue;
+
+                hotelsWithPrices.Add(hotel);
+            }
+
+            // Sıralama
+            var sortedHotels = sortBy.ToLower() switch
+            {
+                "price" => sortOrder.ToLower() == "asc" 
+                    ? hotelsWithPrices.OrderBy(h => ((Hotel)h).AveragePrice ?? decimal.MaxValue)
+                    : hotelsWithPrices.OrderByDescending(h => ((Hotel)h).AveragePrice ?? 0),
+                "stars" => sortOrder.ToLower() == "asc"
+                    ? hotelsWithPrices.OrderBy(h => ((Hotel)h).StarRating)
+                    : hotelsWithPrices.OrderByDescending(h => ((Hotel)h).StarRating),
+                "name" => sortOrder.ToLower() == "asc"
+                    ? hotelsWithPrices.OrderBy(h => ((Hotel)h).Name)
+                    : hotelsWithPrices.OrderByDescending(h => ((Hotel)h).Name),
+                "rating" => sortOrder.ToLower() == "asc"
+                    ? hotelsWithPrices.OrderBy(h => ((Hotel)h).AverageOverallRating)
+                    : hotelsWithPrices.OrderByDescending(h => ((Hotel)h).AverageOverallRating),
+                _ => hotelsWithPrices.OrderByDescending(h => ((Hotel)h).AverageOverallRating)
+            };
+
+            // Pagination
+            var totalCount = sortedHotels.Count();
+            var pagedHotels = sortedHotels
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Cast<Hotel>()
+                .ToList();
+
+            var result = new
+            {
+                hotels = pagedHotels,
+                pagination = new
+                {
+                    currentPage = page,
+                    pageSize = pageSize,
+                    totalCount = totalCount,
+                    totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                    hasNext = page * pageSize < totalCount,
+                    hasPrevious = page > 1
+                }
+            };
+
+            return Ok(result);
         }
 
         // GET: api/hotels/1
@@ -41,7 +143,7 @@ namespace HotelApi.Controllers
         {
             var hotel = await _context.Hotels
                 .Include(h => h.OwnerUser)
-                .FirstOrDefaultAsync(h => h.Id == id);
+                .FirstOrDefaultAsync(h => h.Id == id && h.Status == HotelStatus.Approved);
 
             return hotel is null ? NotFound() : Ok(hotel);
         }
@@ -65,11 +167,35 @@ namespace HotelApi.Controllers
                 Address = hotelDto.Address,
                 TaxNo = hotelDto.TaxNo,
                 Status = HotelStatus.Pending, // Yeni oteller her zaman pending olarak başlar
-                StarRating = hotelDto.StarRating
+                StarRating = hotelDto.StarRating,
+                Description = hotelDto.Description,
+                Phone = hotelDto.Phone,
+                Email = hotelDto.Email,
+                Website = hotelDto.Website,
+                Amenities = hotelDto.Amenities,
+                CheckInTime = hotelDto.CheckInTime,
+                CheckOutTime = hotelDto.CheckOutTime,
+                Policies = hotelDto.Policies
             };
 
             _context.Hotels.Add(hotel);
             await _context.SaveChangesAsync();
+
+            // Otel oluşturulduktan sonra otomatik olarak property oluştur
+            var property = new Property
+            {
+                HotelId = hotel.Id,
+                Title = hotel.Name,
+                Description = hotel.Description,
+                City = hotel.City,
+                Address = hotel.Address,
+                Stars = hotel.StarRating,
+                Location = $"{hotel.City}, {hotel.Address}"
+            };
+
+            _context.Properties.Add(property);
+            await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetById), new { id = hotel.Id }, hotel);
         }
 
@@ -327,6 +453,65 @@ namespace HotelApi.Controllers
                 topCities = cityStats,
                 generatedAt = DateTime.UtcNow
             });
+        }
+
+        // POST: api/hotels/create-properties-for-existing-hotels
+        [HttpPost("create-properties-for-existing-hotels")]
+        [Authorize(Policy = "HotelOwnerOnly")]
+        public async Task<IActionResult> CreatePropertiesForExistingHotels()
+        {
+            try
+            {
+                // JWT token'dan user ID'yi al
+                var userIdClaim = HttpContext.User.FindFirst("UserId");
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                {
+                    return Unauthorized();
+                }
+
+                // Kullanıcının otellerini al
+                var hotels = await _context.Hotels
+                    .Where(h => h.OwnerUserId == currentUserId)
+                    .ToListAsync();
+
+                var createdProperties = new List<Property>();
+
+                foreach (var hotel in hotels)
+                {
+                    // Bu otel için property var mı kontrol et
+                    var existingProperty = await _context.Properties
+                        .FirstOrDefaultAsync(p => p.HotelId == hotel.Id);
+
+                    if (existingProperty == null)
+                    {
+                        // Property oluştur
+                        var property = new Property
+                        {
+                            HotelId = hotel.Id,
+                            Title = hotel.Name,
+                            Description = hotel.Description,
+                            City = hotel.City,
+                            Address = hotel.Address,
+                            Stars = hotel.StarRating,
+                            Location = $"{hotel.City}, {hotel.Address}"
+                        };
+
+                        _context.Properties.Add(property);
+                        createdProperties.Add(property);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = $"{createdProperties.Count} property oluşturuldu",
+                    createdProperties = createdProperties.Select(p => new { p.Id, p.Title, p.HotelId })
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Property oluşturulurken bir hata oluştu");
+            }
         }
     }
 }

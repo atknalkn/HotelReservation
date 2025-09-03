@@ -10,6 +10,7 @@ export interface Hotel {
   starRating: number;
   ownerUserId: number;
   taxNo: string;
+  averagePrice?: number;
 }
 
 export interface Review {
@@ -52,6 +53,7 @@ export interface Availability {
   price: number;
   stock: number;
   priceOverride: number | null;
+  basePrice: number;
   roomTypeName?: string;
   propertyTitle?: string;
   hotelName?: string;

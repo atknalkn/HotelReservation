@@ -23,23 +23,14 @@ interface PendingReview {
   createdAt: string;
 }
 
-interface CommissionSettings {
-  id: number;
-  commissionRate: number;
-  minimumCommission: number;
-  maximumCommission: number;
-  calculationMethod: string;
-  isActive: boolean;
-  lastUpdated: string;
-}
-
 export default function AdminPage() {
   const [pendingHotels, setPendingHotels] = useState<PendingHotel[]>([]);
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
-  const [commissionSettings, setCommissionSettings] = useState<CommissionSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'hotels' | 'reviews' | 'commission'>('hotels');
+  const [activeTab, setActiveTab] = useState<'hotels' | 'reviews'>('hotels');
   const [userRole, setUserRole] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -57,6 +48,7 @@ export default function AdminPage() {
 
     const userData = JSON.parse(user);
     setUserRole(userData.role);
+    setUserName(userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.email || 'Admin');
 
     // Hotel owner'ları kendi panellerine yönlendir
     if (userData.role === 'HotelOwner') {
@@ -73,19 +65,43 @@ export default function AdminPage() {
     await fetchData();
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUserRole('');
+    setUserName('');
+    setIsDropdownOpen(false);
+    router.push('/login');
+  };
+
   const fetchData = async () => {
     try {
-      const [hotelsRes, reviewsRes, commissionRes] = await Promise.all([
-        api.get('/api/hotels/pending'),
-        api.get('/api/reviews/pending'),
-        api.get('/api/commission/settings')
-      ]);
+      console.log('API çağrıları başlıyor...');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('Token bulunamadı');
+        return;
+      }
+      
+      const hotelsRes = await api.get('/api/hotels/pending', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Hotels API başarılı:', hotelsRes.data);
+      
+      const reviewsRes = await api.get('/api/reviews/pending', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Reviews API başarılı:', reviewsRes.data);
       
       setPendingHotels(hotelsRes.data);
       setPendingReviews(reviewsRes.data);
-      setCommissionSettings(commissionRes.data);
-    } catch (error) {
-      console.error('Veri alınamadı:', error);
+    } catch (error: any) {
+      console.error('API hatası detayı:', error);
+      console.error('Hata mesajı:', error.message);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      console.error('Response headers:', error.response?.headers);
     } finally {
       setLoading(false);
     }
@@ -93,7 +109,10 @@ export default function AdminPage() {
 
   const approveHotel = async (hotelId: number) => {
     try {
-      await api.post(`/api/hotels/${hotelId}/approve`, {});
+      const token = localStorage.getItem('token');
+      await api.post(`/api/hotels/${hotelId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchData(); // Listeyi yenile
     } catch (error) {
       console.error('Otel onaylanamadı:', error);
@@ -102,16 +121,36 @@ export default function AdminPage() {
 
   const rejectHotel = async (hotelId: number, reason: string) => {
     try {
-      await api.post(`/api/hotels/${hotelId}/reject`, { reason });
+      const token = localStorage.getItem('token');
+      await api.post(`/api/hotels/${hotelId}/reject`, { reason }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchData(); // Listeyi yenile
     } catch (error) {
       console.error('Otel reddedilemedi:', error);
     }
   };
 
+  const deleteHotel = async (hotelId: number) => {
+    if (window.confirm('Bu oteli silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+      try {
+        const token = localStorage.getItem('token');
+        await api.delete(`/api/hotels/${hotelId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        await fetchData(); // Listeyi yenile
+      } catch (error) {
+        console.error('Otel silinemedi:', error);
+      }
+    }
+  };
+
   const approveReview = async (reviewId: number) => {
     try {
-      await api.post(`/api/reviews/${reviewId}/approve`, {});
+      const token = localStorage.getItem('token');
+      await api.post(`/api/reviews/${reviewId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchData(); // Listeyi yenile
     } catch (error) {
       console.error('Yorum onaylanamadı:', error);
@@ -120,7 +159,10 @@ export default function AdminPage() {
 
   const rejectReview = async (reviewId: number, reason: string) => {
     try {
-      await api.post(`/api/reviews/${reviewId}/reject`, { reason });
+      const token = localStorage.getItem('token');
+      await api.post(`/api/reviews/${reviewId}/reject`, { reason }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchData(); // Listeyi yenile
     } catch (error) {
       console.error('Yorum reddedilemedi:', error);
@@ -172,27 +214,31 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-xl font-bold text-white">Alkan Rezervation</Link>
+              <span className="text-xl font-bold text-white">Alkan Rezervation</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link 
-                href="/" 
-                className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Ana Sayfa
-              </Link>
-              <Link 
-                href="/hotels" 
-                className="text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Oteller
-              </Link>
-              <Link 
-                href="/admin" 
-                className="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Admin
-              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center text-white hover:text-indigo-100 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <span>{userName}</span>
+                  <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Çıkış Yap
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -224,16 +270,6 @@ export default function AdminPage() {
                 }`}
               >
                 Onay Bekleyen Yorumlar ({pendingReviews.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('commission')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'commission'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Komisyon Ayarları
               </button>
             </nav>
           </div>
@@ -268,6 +304,12 @@ export default function AdminPage() {
                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                           >
                             Reddet
+                          </button>
+                          <button
+                            onClick={() => deleteHotel(hotel.id)}
+                            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                          >
+                            Sil
                           </button>
                         </div>
                       </div>
@@ -328,53 +370,6 @@ export default function AdminPage() {
               ) : (
                 <p className="text-gray-500 text-center py-8">
                   Onay bekleyen yorum bulunmuyor.
-                </p>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'commission' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Komisyon Ayarları</h2>
-              {commissionSettings ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Komisyon Oranı (%)</label>
-                      <p className="text-lg font-semibold">{commissionSettings.commissionRate}%</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Hesaplama Yöntemi</label>
-                      <p className="text-lg font-semibold">
-                        {commissionSettings.calculationMethod === 'Percentage' ? 'Yüzde' :
-                         commissionSettings.calculationMethod === 'FixedAmount' ? 'Sabit Tutar' : 'Kademeli'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Minimum Komisyon</label>
-                      <p className="text-lg font-semibold">{commissionSettings.minimumCommission} TL</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Maksimum Komisyon</label>
-                      <p className="text-lg font-semibold">
-                        {commissionSettings.maximumCommission > 0 ? `${commissionSettings.maximumCommission} TL` : 'Sınırsız'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-gray-500">
-                      Son güncelleme: {new Date(commissionSettings.lastUpdated).toLocaleDateString('tr-TR')}
-                    </p>
-                    <p className={`text-sm font-medium ${
-                      commissionSettings.isActive ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      Durum: {commissionSettings.isActive ? 'Aktif' : 'Pasif'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">
-                  Komisyon ayarları yüklenemedi.
                 </p>
               )}
             </div>

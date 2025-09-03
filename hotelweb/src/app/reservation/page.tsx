@@ -105,19 +105,82 @@ export default function ReservationPage() {
 
   const handleReservationSubmit = async (formData: any) => {
     try {
-      // Rezervasyon verilerini hazırla
+      // Kullanıcı bilgilerini al
+      const userData = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      if (!userData || !token) {
+        alert('Rezervasyon yapmak için giriş yapmalısınız');
+        router.push('/login');
+        return;
+      }
+      
+      let user;
+      try {
+        user = JSON.parse(userData);
+      } catch (error) {
+        console.error('localStorage user verisi parse edilemedi:', error);
+        alert('Kullanıcı bilgileri bozuk. Lütfen tekrar giriş yapın.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+        return;
+      }
+      
+      // Debug: Kullanıcı bilgilerini kontrol et
+      console.log('Kullanıcı bilgileri:', user);
+      console.log('User ID:', user.id, 'Type:', typeof user.id);
+      console.log('User object keys:', Object.keys(user));
+      
+      // User ID kontrolü - daha kapsamlı
+      if (!user || user.id === undefined || user.id === null) {
+        console.error('User ID bulunamadı:', user);
+        alert('Kullanıcı ID bilgisi eksik. Lütfen tekrar giriş yapın.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+        return;
+      }
+      
+      // User ID'yi güvenli şekilde integer'a çevir
+      let userId;
+      if (typeof user.id === 'string') {
+        userId = parseInt(user.id);
+      } else if (typeof user.id === 'number') {
+        userId = user.id;
+      } else {
+        console.error('User ID formatı beklenmeyen:', user.id);
+        alert('Kullanıcı bilgisi formatı hatalı. Lütfen tekrar giriş yapın.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+        return;
+      }
+      
+      if (isNaN(userId) || userId <= 0) {
+        console.error('User ID geçersiz:', userId);
+        alert('Geçersiz kullanıcı bilgisi. Lütfen tekrar giriş yapın.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+        return;
+      }
+      
+      // Rezervasyon verilerini hazırla - sadece API'nin beklediği alanlar
       const reservationPayload = {
+        userId: userId,
         hotelId: parseInt(hotelId!),
         propertyId: parseInt(propertyId!),
         roomTypeId: reservationData.roomTypeId,
-        checkIn: reservationData.checkIn,
-        checkOut: reservationData.checkOut,
-        guests: reservationData.guests,
-        totalPrice: reservationData.totalPrice,
-        // Kullanıcı bilgileri form'dan gelecek
-        ...formData
+        checkIn: new Date(reservationData.checkIn).toISOString(),
+        checkOut: new Date(reservationData.checkOut).toISOString(),
+        guests: reservationData.guests
+        // totalPrice API tarafında hesaplanacak
       };
 
+      // Debug: Gönderilen veriyi kontrol et
+      console.log('Rezervasyon payload:', reservationPayload);
+      
       // API'ye rezervasyon POST isteği gönder
       const response = await api.post('/api/reservations', reservationPayload);
       
@@ -127,10 +190,13 @@ export default function ReservationPage() {
       }
     } catch (error: any) {
       console.error('Rezervasyon hatası:', error);
+      console.error('Hata detayları:', error.response?.data);
       
       // Hata mesajını göster
       if (error.response?.data?.message) {
         alert(`Rezervasyon hatası: ${error.response.data.message}`);
+      } else if (error.response?.data) {
+        alert(`Rezervasyon hatası: ${JSON.stringify(error.response.data)}`);
       } else {
         alert('Rezervasyon yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
       }

@@ -8,49 +8,35 @@ export const api = axios.create({
   }
 });
 
-// Temporarily comment out interceptors to debug
-/*
-// Request interceptor for logging
+// Request interceptor - JWT token ekle
 api.interceptors.request.use(
   (config) => {
-    console.log('🚀 API Request Interceptor Called!');
-    console.log('Interceptor - API Request:', config.method?.toUpperCase(), config.url);
-    console.log('Interceptor - API Request Data:', config.data);
-    console.log('Interceptor - API Request Headers:', config.headers);
-    console.log('Interceptor - API Base URL:', config.baseURL);
-    console.log('Interceptor - Full URL:', (config.baseURL || '') + (config.url || ''));
-    console.log('Interceptor - Config object:', config);
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
-    console.error('❌ API Request Interceptor Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor for logging
+// Response interceptor - hata yönetimi
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response Interceptor Called!');
-    console.log('Interceptor - API Response:', response.status, response.config.url);
-    console.log('Interceptor - API Response Data:', response.data);
     return response;
   },
   (error) => {
-    console.error('❌ API Response Interceptor Error:');
-    console.error('Interceptor - Error object:', error);
-    console.error('Interceptor - Error message:', error.message);
-    console.error('Interceptor - Error code:', error.code);
-    console.error('Interceptor - Error status:', error.response?.status);
-    console.error('Interceptor - Error statusText:', error.response?.statusText);
-    console.error('Interceptor - Error data:', error.response?.data);
-    console.error('Interceptor - Error headers:', error.response?.headers);
-    console.error('Interceptor - Error config:', error.config);
-    console.error('Interceptor - Error stack:', error.stack);
+    if (error.response?.status === 401) {
+      // Token süresi dolmuş veya geçersiz
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
-*/
 
 // API fonksiyonları
 export const authAPI = {

@@ -93,12 +93,12 @@ export function HotelCard({ hotel, onClick }: HotelCardProps) {
           </div>
         </div>
 
-        {/* Fiyat Bilgisi (Placeholder) */}
+        {/* Fiyat Bilgisi */}
         <div className="border-t pt-3">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-500">
               <span className="text-lg font-semibold text-indigo-600">
-                ₺{Math.floor(Math.random() * 500) + 200}
+                ₺{hotel.averagePrice || 'Fiyat bilgisi yok'}
               </span>
               <span className="text-gray-400"> / gece</span>
             </div>

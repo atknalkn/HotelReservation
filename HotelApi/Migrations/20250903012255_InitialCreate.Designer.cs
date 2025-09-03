@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HotelApi.Migrations
 {
     [DbContext(typeof(HotelDbContext))]
-    [Migration("20250827044803_AddReservationEntity")]
-    partial class AddReservationEntity
+    [Migration("20250903012255_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,6 +53,44 @@ namespace HotelApi.Migrations
                     b.ToTable("Availabilities");
                 });
 
+            modelBuilder.Entity("HotelApi.Models.CommissionSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalculationMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("MaximumCommission")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("MinimumCommission")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.HasIndex("IsActive", "LastUpdated");
+
+                    b.ToTable("CommissionSettings");
+                });
+
             modelBuilder.Entity("HotelApi.Models.Hotel", b =>
                 {
                     b.Property<int>("Id")
@@ -65,7 +103,45 @@ namespace HotelApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Amenities")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("AverageCleanlinessRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageLocationRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageOverallRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageServiceRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageValueRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("CheckInTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CheckOutTime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -75,6 +151,14 @@ namespace HotelApi.Migrations
 
                     b.Property<int>("OwnerUserId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Policies")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("StarRating")
                         .HasColumnType("integer");
@@ -87,12 +171,20 @@ namespace HotelApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TotalReviews")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Website")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerUserId");
 
                     b.HasIndex("TaxNo")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"TaxNo\" IS NOT NULL AND \"TaxNo\" != ''");
 
                     b.ToTable("Hotels");
                 });
@@ -109,9 +201,27 @@ namespace HotelApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal>("AverageCleanlinessRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageLocationRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageOverallRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageServiceRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageValueRating")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -130,6 +240,9 @@ namespace HotelApi.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("TotalReviews")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -153,6 +266,9 @@ namespace HotelApi.Migrations
                     b.Property<DateTime>("CheckOut")
                         .HasColumnType("date");
 
+                    b.Property<decimal>("CommissionAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -161,6 +277,9 @@ namespace HotelApi.Migrations
 
                     b.Property<int>("HotelId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("PropertyId")
                         .HasColumnType("integer");
@@ -190,6 +309,74 @@ namespace HotelApi.Migrations
                     b.ToTable("Reservations");
                 });
 
+            modelBuilder.Entity("HotelApi.Models.Review", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNotes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("CleanlinessRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HotelId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LocationRating")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OverallRating")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PropertyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReservationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RoomTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ServiceRating")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ValueRating")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservationId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("HotelId", "Status", "CreatedAt");
+
+                    b.HasIndex("PropertyId", "Status", "CreatedAt");
+
+                    b.HasIndex("RoomTypeId", "Status", "CreatedAt");
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("HotelApi.Models.RoomType", b =>
                 {
                     b.Property<int>("Id")
@@ -198,11 +385,29 @@ namespace HotelApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("AverageCleanlinessRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageLocationRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageOverallRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageServiceRating")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("AverageValueRating")
+                        .HasColumnType("numeric");
+
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("numeric");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -213,6 +418,9 @@ namespace HotelApi.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("PropertyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalReviews")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -234,11 +442,34 @@ namespace HotelApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IdentityNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -260,6 +491,17 @@ namespace HotelApi.Migrations
                         .IsRequired();
 
                     b.Navigation("RoomType");
+                });
+
+            modelBuilder.Entity("HotelApi.Models.CommissionSettings", b =>
+                {
+                    b.HasOne("HotelApi.Models.User", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("HotelApi.Models.Hotel", b =>
@@ -319,6 +561,47 @@ namespace HotelApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("HotelApi.Models.Review", b =>
+                {
+                    b.HasOne("HotelApi.Models.Hotel", "Hotel")
+                        .WithMany("Reviews")
+                        .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HotelApi.Models.Property", "Property")
+                        .WithMany("Reviews")
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HotelApi.Models.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HotelApi.Models.RoomType", "RoomType")
+                        .WithMany("Reviews")
+                        .HasForeignKey("RoomTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HotelApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Hotel");
+
+                    b.Navigation("Property");
+
+                    b.Navigation("Reservation");
+
+                    b.Navigation("RoomType");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("HotelApi.Models.RoomType", b =>
                 {
                     b.HasOne("HotelApi.Models.Property", "Property")
@@ -333,16 +616,22 @@ namespace HotelApi.Migrations
             modelBuilder.Entity("HotelApi.Models.Hotel", b =>
                 {
                     b.Navigation("Reservations");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("HotelApi.Models.Property", b =>
                 {
+                    b.Navigation("Reviews");
+
                     b.Navigation("RoomTypes");
                 });
 
             modelBuilder.Entity("HotelApi.Models.RoomType", b =>
                 {
                     b.Navigation("Availabilities");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("HotelApi.Models.User", b =>

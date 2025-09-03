@@ -23,7 +23,9 @@ export function HotelList({ hotels, searchFilters, onHotelClick }: HotelListProp
     rating: 0,
     capacity: 0,
     amenities: [],
-    sortBy: 'rating'
+    sortBy: 'rating',
+    sortOrder: 'desc',
+    minStars: 0
   });
 
   // Filtreleme ve sıralama işlemleri
@@ -47,13 +49,14 @@ export function HotelList({ hotels, searchFilters, onHotelClick }: HotelListProp
         case 'rating':
           return b.averageOverallRating - a.averageOverallRating;
         case 'price':
-          // Şimdilik rastgele fiyat kullanıyoruz
-          return Math.random() - 0.5;
+          // Fiyat sıralaması (düşükten yükseğe)
+          return (a.averagePrice || 0) - (b.averagePrice || 0);
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'distance':
-          // Şimdilik rastgele mesafe kullanıyoruz
-          return Math.random() - 0.5;
+        case 'stars':
+          return filters.sortOrder === 'asc'
+            ? a.starRating - b.starRating
+            : b.starRating - a.starRating;
         default:
           return 0;
       }

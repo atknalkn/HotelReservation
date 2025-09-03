@@ -23,15 +23,26 @@ export function RoomList({ roomTypes, availabilities, selectedDates }: RoomListP
     const checkOut = new Date(selectedDates.checkOut);
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
 
-    // Bu oda tipi için availability bul
-    const roomAvailability = availabilities.find(a => a.roomTypeId === roomTypeId);
+    // Bu oda tipi için seçili tarih aralığındaki availability'leri bul
+    const roomAvailabilities = availabilities.filter(a => 
+      a.roomTypeId === roomTypeId &&
+      new Date(a.date) >= checkIn &&
+      new Date(a.date) < checkOut
+    );
     
-    if (roomAvailability && roomAvailability.availableRooms > 0) {
-      const totalPrice = roomAvailability.price * nights;
+    // Tüm geceler için stok var mı kontrol et
+    const hasAvailability = roomAvailabilities.length === nights && 
+                           roomAvailabilities.every(a => a.stock >= selectedDates.guests);
+    
+    if (hasAvailability && roomAvailabilities.length > 0) {
+      // Ortalama fiyat hesapla
+      const totalPrice = roomAvailabilities.reduce((sum, a) => sum + (a.priceOverride || a.basePrice), 0);
+      const averagePrice = totalPrice / nights;
+      
       return {
         available: true,
-        price: roomAvailability.price,
-        totalPrice,
+        price: averagePrice,
+        totalPrice: totalPrice,
         nights
       };
     }
