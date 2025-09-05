@@ -70,7 +70,7 @@ export default function ReservationPage() {
         
         // Toplam fiyat ve gece sayısını hesapla
         const nights = Math.ceil((new Date(checkOut!).getTime() - new Date(checkIn!).getTime()) / (1000 * 60 * 60 * 24));
-        const availability = availabilityResponse.data.find(a => a.roomTypeId === defaultRoomType.id);
+        const availability = availabilityResponse.data.find((a: any) => a.roomTypeId === defaultRoomType.id);
         const totalPrice = availability ? availability.price * nights : 0;
         
         setReservationData(prev => ({
