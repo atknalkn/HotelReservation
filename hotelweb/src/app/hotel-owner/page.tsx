@@ -68,7 +68,7 @@ export default function HotelOwnerPage() {
   const [activeTab, setActiveTab] = useState<'hotels' | 'rooms' | 'availability' | 'reservations'>('hotels');
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formType, setFormType] = useState<'hotel' | 'room' | 'availability'>('hotel');
+  const [formType, setFormType] = useState<'hotel' | 'room' | 'availability' | null>('hotel');
   const [formData, setFormData] = useState({
     // Hotel form data
     hotelName: '',
