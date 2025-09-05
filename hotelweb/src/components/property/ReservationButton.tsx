@@ -48,6 +48,8 @@ export function ReservationButton({ hotel, property, selectedDates, onDateChange
     closeReservationModal();
     
     // Rezervasyon sayfasına yönlendir
+    if (!property) return;
+    
     const queryParams = new URLSearchParams({
       hotelId: hotel.id.toString(),
       propertyId: property.id.toString(),
