@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Vercel için output ayarını kaldırıyoruz
   experimental: {
-    outputFileTracingRoot: undefined,
+    // Vercel otomatik olarak optimize eder
   },
 };
 
