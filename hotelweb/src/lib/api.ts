@@ -116,14 +116,14 @@ export const hotelOwnerAPI = {
     return response.data;
   },
 
-  createHotel: async (hotelData: any, token: string) => {
+  createHotel: async (hotelData: Record<string, unknown>, token: string) => {
     const response = await api.post('/api/hotels', hotelData, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   },
 
-  updateHotel: async (hotelId: number, hotelData: any, token: string) => {
+  updateHotel: async (hotelId: number, hotelData: Record<string, unknown>, token: string) => {
     const response = await api.put(`/api/hotels/${hotelId}`, hotelData, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -152,14 +152,14 @@ export const hotelOwnerAPI = {
     return response.data;
   },
 
-  createProperty: async (propertyData: any, token: string) => {
+  createProperty: async (propertyData: Record<string, unknown>, token: string) => {
     const response = await api.post('/api/properties', propertyData, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   },
 
-  updateProperty: async (propertyId: number, propertyData: any, token: string) => {
+  updateProperty: async (propertyId: number, propertyData: Record<string, unknown>, token: string) => {
     const response = await api.put(`/api/properties/${propertyId}`, propertyData, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -181,14 +181,14 @@ export const hotelOwnerAPI = {
     return response.data;
   },
 
-  createRoomType: async (roomTypeData: any, token: string) => {
+  createRoomType: async (roomTypeData: Record<string, unknown>, token: string) => {
     const response = await api.post('/api/roomtypes', roomTypeData, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   },
 
-  updateRoomType: async (roomTypeId: number, roomTypeData: any, token: string) => {
+  updateRoomType: async (roomTypeId: number, roomTypeData: Record<string, unknown>, token: string) => {
     const response = await api.put(`/api/roomtypes/${roomTypeId}`, roomTypeData, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -210,14 +210,14 @@ export const hotelOwnerAPI = {
     return response.data;
   },
 
-  createAvailability: async (availabilityData: any, token: string) => {
+  createAvailability: async (availabilityData: Record<string, unknown>, token: string) => {
     const response = await api.post('/api/availabilities', availabilityData, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   },
 
-  updateAvailability: async (availabilityId: number, availabilityData: any, token: string) => {
+  updateAvailability: async (availabilityId: number, availabilityData: Record<string, unknown>, token: string) => {
     const response = await api.put(`/api/availabilities/${availabilityId}`, availabilityData, {
       headers: { Authorization: `Bearer ${token}` }
     });

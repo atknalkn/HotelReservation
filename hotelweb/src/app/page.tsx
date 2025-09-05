@@ -141,7 +141,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-8 border border-indigo-200">
               <h3 className="text-2xl font-bold text-indigo-900 mb-4">
-                Tesisiniz Alkan Rezervation'da yer almıyor mu?
+                Tesisiniz Alkan Rezervation&apos;da yer almıyor mu?
               </h3>
               <p className="text-lg text-indigo-700 mb-6">
                 Otelinizi platformumuza ekleyerek daha fazla müşteriye ulaşın

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface SearchFormProps {
-  onSearch?: (filters: any) => void;
+  onSearch?: (filters: { city: string; checkIn: string; checkOut: string; guests: number }) => void;
 }
 
 export function SearchForm({ onSearch }: SearchFormProps) {
