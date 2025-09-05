@@ -375,7 +375,7 @@ export default function HotelOwnerPage() {
         availabilityStock: 1,
         availabilityPriceOverride: ''
       });
-      setFormType(null);
+      setFormType('hotel');
       setShowAddForm(false);
     } catch (error: any) {
       console.error('Form submission error:', error);
