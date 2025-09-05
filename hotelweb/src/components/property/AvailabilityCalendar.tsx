@@ -38,7 +38,7 @@ export function AvailabilityCalendar({ availabilities, selectedDates, onDateChan
   // Tarih için availability kontrolü
   const getAvailabilityForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
-    const dateAvailability = availabilities.find(a => a.date === dateString);
+    const dateAvailability = availabilities.find((a: any) => a.date === dateString);
     
     if (dateAvailability) {
       return {

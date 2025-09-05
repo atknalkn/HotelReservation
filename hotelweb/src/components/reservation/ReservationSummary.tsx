@@ -27,7 +27,7 @@ export function ReservationSummary({
   // Seçili oda tipi için gece başına fiyat
   const getPricePerNight = () => {
     if (!selectedRoomType) return 0;
-    const availability = availabilities.find(a => a.roomTypeId === selectedRoomType.id);
+    const availability = availabilities.find((a: any) => a.roomTypeId === selectedRoomType.id);
     return availability ? availability.price : selectedRoomType.price;
   };
 

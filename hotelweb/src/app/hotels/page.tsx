@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { SearchForm } from '@/components/SearchForm';
 import { HotelList } from '@/components/hotels/HotelList';
 import { Hotel, Review } from '@/lib/types';
 
-export default function HotelsPage() {
+function HotelsContent() {
   const searchParams = useSearchParams();
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -337,5 +337,13 @@ export default function HotelsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function HotelsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HotelsContent />
+    </Suspense>
   );
 }

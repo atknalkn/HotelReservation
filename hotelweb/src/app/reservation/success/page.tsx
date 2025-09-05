@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ interface ReservationSuccessData {
   createdAt: string;
 }
 
-export default function ReservationSuccessPage() {
+function ReservationSuccessContent() {
   const searchParams = useSearchParams();
   const reservationId = searchParams.get('id');
   
@@ -243,5 +243,13 @@ export default function ReservationSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReservationSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReservationSuccessContent />
+    </Suspense>
   );
 }

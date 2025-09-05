@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { Hotel, Property, RoomType, Availability } from '@/lib/types';
 import { ReservationForm } from '@/components/reservation/ReservationForm';
 import { ReservationSummary } from '@/components/reservation/ReservationSummary';
 
-export default function ReservationPage() {
+function ReservationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -92,7 +92,7 @@ export default function ReservationPage() {
     
     // Yeni oda tipi için fiyat hesapla
     const nights = Math.ceil((new Date(checkOut!).getTime() - new Date(checkIn!).getTime()) / (1000 * 60 * 60 * 24));
-    const availability = availabilities.find(a => a.roomTypeId === roomType.id);
+    const availability = availabilities.find((a: any) => a.roomTypeId === roomType.id);
     const totalPrice = availability ? availability.price * nights : 0;
     
     setReservationData(prev => ({
@@ -335,5 +335,13 @@ export default function ReservationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReservationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReservationContent />
+    </Suspense>
   );
 }

@@ -219,7 +219,7 @@ export default function HotelOwnerPage() {
   };
 
   const handleHotelChange = async (hotelId: number) => {
-    const hotel = hotels.find(h => h.id === hotelId);
+    const hotel = hotels.find((h: any) => h.id === hotelId);
     setSelectedHotel(hotel || null);
     
     const token = localStorage.getItem('token');

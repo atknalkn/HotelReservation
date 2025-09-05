@@ -67,7 +67,7 @@ export default function PropertyDetailPage() {
   };
 
   const handlePropertyChange = async (propertyId: number) => {
-    const property = properties.find(p => p.id === propertyId);
+    const property = properties.find((p: any) => p.id === propertyId);
     if (property) {
       setSelectedProperty(property);
       
