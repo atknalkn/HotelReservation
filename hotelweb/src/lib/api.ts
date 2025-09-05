@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({ 
-  baseURL: 'http://localhost:5164', // Hardcoded to fix port issue
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5164',
   timeout: 10000, // 10 saniye timeout
   headers: {
     'Content-Type': 'application/json',
