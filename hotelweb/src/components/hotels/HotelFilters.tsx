@@ -193,7 +193,9 @@ export function HotelFilters({ filters, onFiltersChange }: HotelFiltersProps) {
                 rating: 0,
                 capacity: 0,
                 amenities: [],
-                sortBy: 'rating'
+                sortBy: 'rating',
+                sortOrder: 'desc',
+                minStars: 0
               })}
               className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
             >
