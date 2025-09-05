@@ -69,7 +69,7 @@ export default function ReservationPage() {
         setSelectedRoomType(defaultRoomType);
         
         // Toplam fiyat ve gece sayısını hesapla
-        const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+        const nights = Math.ceil((new Date(checkOut!).getTime() - new Date(checkIn!).getTime()) / (1000 * 60 * 60 * 24));
         const availability = availabilityResponse.data.find(a => a.roomTypeId === defaultRoomType.id);
         const totalPrice = availability ? availability.price * nights : 0;
         
@@ -91,7 +91,7 @@ export default function ReservationPage() {
     setSelectedRoomType(roomType);
     
     // Yeni oda tipi için fiyat hesapla
-    const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+    const nights = Math.ceil((new Date(checkOut!).getTime() - new Date(checkIn!).getTime()) / (1000 * 60 * 60 * 24));
     const availability = availabilities.find(a => a.roomTypeId === roomType.id);
     const totalPrice = availability ? availability.price * nights : 0;
     
