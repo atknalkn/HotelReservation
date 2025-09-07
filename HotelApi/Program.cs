@@ -122,6 +122,9 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Health check endpoint
+app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
 // Pipeline
 if (app.Environment.IsDevelopment())
 {
