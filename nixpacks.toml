@@ -2,10 +2,10 @@
 nixPkgs = ["dotnet-sdk_8"]
 
 [phases.install]
-cmds = ["dotnet restore"]
+cmds = ["dotnet restore HotelApi/HotelApi.csproj"]
 
 [phases.build]
-cmds = ["dotnet publish --no-restore -c Release -o out"]
+cmds = ["dotnet publish HotelApi/HotelApi.csproj --no-restore -c Release -o out"]
 
 [start]
 cmd = "./out/HotelApi"
