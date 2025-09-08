@@ -20,7 +20,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",
                 "http://localhost:3001", 
                 "http://127.0.0.1:3000",
-                "http://127.0.0.1:3001"
+                "http://127.0.0.1:3001",
+                "https://hotel-reservation-gold-phi.vercel.app" // Vercel frontend URL'i
               )
               .AllowAnyHeader()
               .AllowAnyMethod()
