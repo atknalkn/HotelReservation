@@ -58,14 +58,14 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
 });
 
-// JWT Service
-builder.Services.AddScoped<IJwtService, JwtService>();
+// JWT Service - Geçici olarak devre dışı bırakıyoruz
+// builder.Services.AddScoped<IJwtService, JwtService>();
 
-// Commission Service
-builder.Services.AddScoped<ICommissionService, CommissionService>();
+// Commission Service - Geçici olarak devre dışı bırakıyoruz
+// builder.Services.AddScoped<ICommissionService, CommissionService>();
 
-// Review Service
-builder.Services.AddScoped<IReviewService, ReviewService>();
+// Review Service - Geçici olarak devre dışı bırakıyoruz
+// builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // DbContext - Geçici olarak devre dışı bırakıyoruz
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -78,20 +78,20 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 // Logging
 builder.Services.AddLogging();
 
-// Controllers + JSON enum ayarı (string kabul et)
-builder.Services
-    .AddControllers()
-    .AddJsonOptions(o =>
-    {
-        // "Approved", "Pending", "Rejected" gibi string enum değerlerini kabul etsin/dönsün
-        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        
-        // Circular reference'ı önle
-        o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        
-        // Navigation property'leri serialize etme
-        o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    });
+// Controllers - Geçici olarak devre dışı bırakıyoruz
+// builder.Services
+//     .AddControllers()
+//     .AddJsonOptions(o =>
+//     {
+//         // "Approved", "Pending", "Rejected" gibi string enum değerlerini kabul etsin/dönsün
+//         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+//         
+//         // Circular reference'ı önle
+//         o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+//         
+//         // Navigation property'leri serialize etme
+//         o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+//     });
 
 // Swagger with JWT support
 builder.Services.AddEndpointsApiExplorer();
@@ -175,7 +175,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// app.MapControllers(); // Geçici olarak devre dışı bırakıyoruz
 
 // Health check endpoint
 app.MapGet("/health", () => "API is running!");
