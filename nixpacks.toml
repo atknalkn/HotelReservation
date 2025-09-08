@@ -4,11 +4,12 @@ nixPkgs = ["dotnet-sdk_8"]
 [phases.install]
 cmds = [
   "dotnet nuget locals all --clear",
-  "dotnet restore HotelApi/HotelApi.csproj --force"
+  "rm -rf ~/.nuget/packages",
+  "dotnet restore HotelApi/HotelApi.csproj --force --verbosity normal"
 ]
 
 [phases.build]
-cmds = ["dotnet publish HotelApi/HotelApi.csproj --no-restore -c Release -o out"]
+cmds = ["dotnet publish HotelApi/HotelApi.csproj --no-restore -c Release -o out --verbosity normal"]
 
 [start]
 cmd = "./out/HotelApi"
