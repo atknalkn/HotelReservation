@@ -67,13 +67,13 @@ builder.Services.AddScoped<ICommissionService, CommissionService>();
 // Review Service
 builder.Services.AddScoped<IReviewService, ReviewService>();
 
-// DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? "Host=localhost;Database=hotelreservation;Username=postgres;Password=password";
+// DbContext - Geçici olarak devre dışı bırakıyoruz
+// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+//     ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+//     ?? "Host=localhost;Database=hotelreservation;Username=postgres;Password=password";
 
-builder.Services.AddDbContext<HotelDbContext>(options =>
-    options.UseNpgsql(connectionString));
+// builder.Services.AddDbContext<HotelDbContext>(options =>
+//     options.UseNpgsql(connectionString));
 
 // Logging
 builder.Services.AddLogging();
