@@ -1,10 +1,10 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "dotnet publish -c Release -o /app/publish"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "HotelApi/Dockerfile"
   },
   "deploy": {
-    "startCommand": "dotnet /app/publish/HotelApi.dll"
+    "startCommand": "dotnet HotelApi.dll"
   }
 }
