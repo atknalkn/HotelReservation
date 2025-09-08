@@ -99,7 +99,6 @@ C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.Assemb
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.csproj.CoreCompileInputs.cache
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.sourcelink.json
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\staticwebassets\msbuild.HotelApi.Microsoft.AspNetCore.StaticWebAssets.props
