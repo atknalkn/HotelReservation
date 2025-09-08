@@ -1,14 +1,15 @@
 # .NET 8 SDK imajı ile build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Proje dosyalarını kopyala ve restore et
-COPY ["HotelApi/HotelApi.csproj", "HotelApi/"]
-RUN dotnet restore "HotelApi/HotelApi.csproj"
+# Proje dosyalarını kopyala
+COPY HotelApi.csproj .
+RUN dotnet restore
 
-# Tüm kaynak kodunu kopyala ve publish et
+# Kaynak kodunu kopyala
 COPY . .
-WORKDIR "/src/HotelApi"
+
+# Publish et
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime imajı
