@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "dotnet HotelApi.dll"
+    "startCommand": "./out/HotelApi"
   }
 }
