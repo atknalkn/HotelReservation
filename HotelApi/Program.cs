@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Text.Json.Serialization;
+using System.Text.Json.Serialization; // <= JSON'da enum'ları string olarak kabul etmek için
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 
@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
                 "http://localhost:3001", 
                 "http://127.0.0.1:3000",
                 "http://127.0.0.1:3001",
-                "https://hotel-reservation-gold-phi.vercel.app"
+                "https://hotel-reservation-gold-phi.vercel.app" // Vercel frontend URL'i
               )
               .AllowAnyHeader()
               .AllowAnyMethod()
@@ -58,35 +58,44 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
 });
 
-// Services
+// JWT Service
 builder.Services.AddScoped<IJwtService, JwtService>();
+
+// Commission Service
 builder.Services.AddScoped<ICommissionService, CommissionService>();
+
+// Review Service
 builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? "Host=localhost;Database=hotelreservation;Username=postgres;Password=password";
-
 builder.Services.AddDbContext<HotelDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Controllers
+// Logging
+builder.Services.AddLogging();
+
+// Controllers + JSON enum ayarı (string kabul et)
 builder.Services
     .AddControllers()
     .AddJsonOptions(o =>
     {
+        // "Approved", "Pending", "Rejected" gibi string enum değerlerini kabul etsin/dönsün
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        
+        // Circular reference'ı önle
         o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        
+        // Navigation property'leri serialize etme
         o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
-// Swagger
+// Swagger with JWT support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel API", Version = "v1" });
     
+    // JWT authentication support
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -114,6 +123,9 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Health check endpoint
+app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
 // Pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -121,15 +133,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Global exception handler
+app.UseExceptionHandler("/error");
+
 app.UseHttpsRedirection();
+
+// CORS middleware - must be before authentication
 app.UseCors("AllowFrontend");
+
+// Authentication ve Authorization middleware'leri
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Health check endpoints
-app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+// Health check endpoint
 app.MapGet("/health", () => "API is running!");
 
 app.Run();
