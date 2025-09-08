@@ -16,16 +16,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:3001", 
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:3001",
-                "https://hotel-reservation-gold-phi.vercel.app" // Vercel frontend URL'i
-              )
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
@@ -127,11 +120,12 @@ var app = builder.Build();
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 // Pipeline
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotel API v1");
+    c.RoutePrefix = "swagger";
+});
 
 // Global exception handler
 app.UseExceptionHandler("/error");
