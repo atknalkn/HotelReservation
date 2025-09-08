@@ -1,13 +1,13 @@
-using HotelApi.Data;
-using HotelApi.Services;
-using HotelApi.DTOs;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json.Serialization; // <= JSON'da enum'ları string olarak kabul etmek için
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi.Models;
+// using HotelApi.Data;
+// using HotelApi.Services;
+// using HotelApi.DTOs;
+// using Microsoft.EntityFrameworkCore;
+// using Microsoft.AspNetCore.Authentication.JwtBearer;
+// using Microsoft.IdentityModel.Tokens;
+// using System.Text;
+// using System.Text.Json.Serialization; // <= JSON'da enum'ları string olarak kabul etmek için
+// using Microsoft.AspNetCore.Authorization;
+// using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,37 +93,37 @@ builder.Services.AddLogging();
 //         o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 //     });
 
-// Swagger with JWT support
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel API", Version = "v1" });
-    
-    // JWT authentication support
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-    
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+// Swagger - Geçici olarak devre dışı bırakıyoruz
+// builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddSwaggerGen(c =>
+// {
+//     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel API", Version = "v1" });
+//     
+//     // JWT authentication support
+//     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//     {
+//         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+//         Name = "Authorization",
+//         In = ParameterLocation.Header,
+//         Type = SecuritySchemeType.ApiKey,
+//         Scheme = "Bearer"
+//     });
+//     
+//     c.AddSecurityRequirement(new OpenApiSecurityRequirement
+//     {
+//         {
+//             new OpenApiSecurityScheme
+//             {
+//                 Reference = new OpenApiReference
+//                 {
+//                     Type = ReferenceType.SecurityScheme,
+//                     Id = "Bearer"
+//                 }
+//             },
+//             new string[] {}
+//         }
+//     });
+// });
 
 var app = builder.Build();
 
@@ -156,12 +156,12 @@ app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp =
 // Simple test endpoint
 app.MapGet("/api/test", () => Results.Ok(new { message = "API is working!", timestamp = DateTime.UtcNow }));
 
-// Pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Pipeline - Geçici olarak devre dışı bırakıyoruz
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
 
 // Global exception handler
 app.UseExceptionHandler("/error");
