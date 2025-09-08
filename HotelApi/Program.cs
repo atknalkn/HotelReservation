@@ -127,8 +127,34 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Exception handling
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        
+        var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (exception != null)
+        {
+            var error = new
+            {
+                message = exception.Error.Message,
+                stackTrace = exception.Error.StackTrace,
+                innerException = exception.Error.InnerException?.Message
+            };
+            
+            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
+        }
+    });
+});
+
 // Health check endpoint
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+// Simple test endpoint
+app.MapGet("/api/test", () => Results.Ok(new { message = "API is working!", timestamp = DateTime.UtcNow }));
 
 // Pipeline
 if (app.Environment.IsDevelopment())
