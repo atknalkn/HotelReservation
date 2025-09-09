@@ -146,4 +146,12 @@ app.MapGet("/health", () => "API is running!");
 
 // Railway port configuration
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
+// --- Automatic Migration ---
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
+    db.Database.Migrate();
+}
+
 app.Run($"http://0.0.0.0:{port}");
