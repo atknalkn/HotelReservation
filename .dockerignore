@@ -1,0 +1,35 @@
+# Ignore build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Ignore IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore frontend (not needed for API deployment)
+hotelweb/
+node_modules/
+
+# Ignore logs
+*.log
+logfile
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore Docker files
+Dockerfile*
+docker-compose*
+.dockerignore

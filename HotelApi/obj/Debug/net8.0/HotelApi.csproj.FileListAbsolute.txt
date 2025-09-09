@@ -113,3 +113,4 @@ C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\refint\HotelApi
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.pdb
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\HotelApi.genruntimeconfig.cache
 C:\Users\Atakan ALKAN\HotelReservation\HotelApi\obj\Debug\net8.0\ref\HotelApi.dll
+C:\Users\Atakan ALKAN\HotelReservation\HotelApi\bin\Debug\net8.0\vercel.json

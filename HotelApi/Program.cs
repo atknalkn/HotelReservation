@@ -144,5 +144,6 @@ app.MapControllers();
 // Health check endpoint
 app.MapGet("/health", () => "API is running!");
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+// Railway port configuration
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://0.0.0.0:{port}");
