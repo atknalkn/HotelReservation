@@ -60,9 +60,27 @@ builder.Services.AddScoped<ICommissionService, CommissionService>();
 // Review Service
 builder.Services.AddScoped<IReviewService, ReviewService>();
 
-// DbContext
+// Eğer Railway DATABASE_URL formatında veriyorsa, onu parse et
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    // örn: postgresql://user:pass@host:5432/dbname
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+}
+else
+{
+    // Lokal geliştirme için appsettings'deki connection string
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+
+// DbContext'e ver
 builder.Services.AddDbContext<HotelDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Logging
 builder.Services.AddLogging();
@@ -147,11 +165,11 @@ app.MapGet("/health", () => "API is running!");
 // Railway port configuration
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
-// --- Automatic Migration --- (GEÇİCİ OLARAK KAPALI)
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
-//     db.Database.Migrate();
-// }
+// --- Automatic Migration ---
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run($"http://0.0.0.0:{port}");
